@@ -1,6 +1,6 @@
 #include "../../include/minishell.h"
 
-t_cmd *parse_tokens(t_token *tokens)
+t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
 {
 	t_cmd *head = NULL;
 	t_cmd *current = NULL;
@@ -32,6 +32,14 @@ t_cmd *parse_tokens(t_token *tokens)
 					tokens = tokens->next;
 					new_cmd->outfile = ft_strdup(tokens->str);
 					new_cmd->append = (tokens->prev->type == APPEND);
+				}
+				else if (tokens->type == HEREDOC && tokens->next)
+				{
+					tokens = tokens->next;
+					new_cmd->heredoc = handle_heredoc(tokens->str, shell);
+					if (new_cmd->heredoc == -1) {
+						shell->exit_status = 130;
+					}
 				}
 				tokens = tokens->next;
 			}

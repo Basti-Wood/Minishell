@@ -36,3 +36,42 @@ char	*ft_strndup(const char *s, size_t n)
 	res[i] = '\0';
 	return (res);
 }
+
+char *ft_strcpy(char *dest, const char *src)
+{
+    int i = 0;
+    while (src[i] != '\0') {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+    return dest;
+}
+
+char *ft_strcat(char *dest, const char *src)
+{
+	unsigned int i;
+	unsigned int j;
+
+	i = 0;
+	while (dest[i] != '\0')
+		i++;
+	j = 0;
+	while (src[j] != '\0')
+	{
+		dest[i] = src[j];
+		i++;
+		j++;
+	}
+	dest[i] = '\0';
+	return (dest);
+}
+
+int		ft_isspace(int c)
+{
+	c = (unsigned char)c;
+	if (c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r'
+		|| c == ' ')
+		return (1);
+	return (0);
+}

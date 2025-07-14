@@ -9,14 +9,16 @@ void type_arg(t_token *token) {
         token->type = APPEND;
     else if (ft_strcmp(token->str, "<") == 0)
         token->type = INPUT;
+    else if (ft_strcmp(token->str, "<<") == 0)
+        token->type = HEREDOC;
     else if (ft_strcmp(token->str, "|") == 0)
         token->type = PIPE;
     else if (ft_strcmp(token->str, ";") == 0)
         token->type = END;
     else if (token->prev == NULL || token->prev->type == PIPE || token->prev->type == END)
-		token->type = CMD;
-	else
-		token->type = ARG;
+        token->type = CMD;
+    else
+        token->type = ARG;
 }
 
 t_token *create_token(char **elements)
@@ -59,7 +61,6 @@ t_token *create_token(char **elements)
     return head;
 }
 
-
 t_token *token_split(char *input)
 {
     char **elements = ft_split_quotes(input);
@@ -75,6 +76,8 @@ t_token *token_split(char *input)
 
     return tokens;
 }
+
+
 
 t_token *tokenize(t_shell *shell)
 {

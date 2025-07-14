@@ -2,9 +2,9 @@
 
 int main(int argc, char **argv, char **env)
 {
-    (void)argc; // Unused, suppress warning
-    (void)argv; // Unused, suppress warning
-	minishell();
-
+    (void)argc;
+    (void)argv;
+    
+    minishell(env);  // Pass environment to minishell
     return 0;
 }

@@ -5,7 +5,7 @@ static t_env_node *init_env(char **env) {
     t_env_node *current = NULL;
 
     for (int i = 0; env[i] != NULL; i++) {
-        char *equal_sign = strchr(env[i], '=');
+        char *equal_sign = ft_strchr(env[i], '=');
         if (!equal_sign)
             continue;
 
@@ -14,8 +14,8 @@ static t_env_node *init_env(char **env) {
             return NULL;
 
         size_t key_len = equal_sign - env[i];
-        new_node->key = strndup(env[i], key_len);
-        new_node->value = strdup(equal_sign + 1);
+        new_node->key = ft_strndup(env[i], key_len);
+        new_node->value = ft_strdup(equal_sign + 1);
         new_node->next = NULL;
 
         if (!head)
