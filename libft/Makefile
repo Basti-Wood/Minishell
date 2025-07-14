@@ -40,7 +40,7 @@ all:		$(NAME)
 $(NAME):	$(OBJ)
 			@make -C $(LIBFT)
 			@cp libft/prelibft.a .
-			@mv libft.a $(NAME)
+			
 			@$(AR) $(NAME) $(OBJ)
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.c | $(OBJF)
