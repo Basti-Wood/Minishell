@@ -3,16 +3,15 @@
 int builtin_echo(char **args)
 {
     int i = 1;
-    bool newline = true;
+    int newline = 1;
     
     // Check for -n flag
     if (args[1] && ft_strcmp(args[1], "-n") == 0)
     {
-        newline = false;
+        newline = 0;
         i = 2;
     }
-    
-    // Print arguments
+
     while (args[i])
     {
         printf("%s", args[i]);
