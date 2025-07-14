@@ -4,10 +4,19 @@ int builtin_cd(char **args, t_env_list *env_list)
 {
     char *path;
     char *home;
-    
+    char *old_pwd;
+    char current_pwd[1024];
+
+    // Get current directory to set OLDPWD later
+    if (getcwd(current_pwd, sizeof(current_pwd)) == NULL)
+    {
+        perror("cd: getcwd error");
+        return 1;
+    }
+    old_pwd = get_env_value(env_list, "PWD");
+
     if (!args[1])
     {
-        // No argument - go to HOME
         home = get_env_value(env_list, "HOME");
         if (!home)
         {
@@ -26,8 +35,11 @@ int builtin_cd(char **args, t_env_list *env_list)
         perror("cd");
         return 1;
     }
+
+    // Update OLDPWD and PWD
+    if (old_pwd)
+        set_env_value(env_list, "OLDPWD", old_pwd);
     
-    // Update PWD environment variable
     char *new_pwd = getcwd(NULL, 0);
     if (new_pwd)
     {

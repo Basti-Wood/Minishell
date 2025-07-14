@@ -18,6 +18,7 @@
 #include <readline/history.h>
 #include <stdbool.h>
 #include <errno.h>
+#include "../libft/libft/libft.h"
 
 // Token types
 typedef enum e_token_type {
@@ -79,10 +80,9 @@ int has_pipe(t_cmd *cmds);
 // Tokenizer
 t_token *tokenize(t_shell *shell);
 t_token *token_split(char *input);
-t_token *create_token(char **elements);
+t_token *create_token(char **elements, t_shell *shell);
 void type_arg(t_token *token);
 char **ft_split_quotes(const char *input);
-int token_count(const char *input);
 
 // Parser
 t_cmd *parse_tokens(t_token *tokens, t_shell *shell);
@@ -120,20 +120,9 @@ char *ft_strndup(const char *s, size_t n);
 char *ft_strcpy(char *dest, const char *src);
 char *ft_strcat(char *dest, const char *src);
 int ft_isspace(int c);
+int	ft_isnum(int c);
+size_t	ft_strlcat(char *dst, const char *src, size_t dstsize);
 
-// Libft functions you need to implement or include
-char *ft_strdup(const char *s);
-char *ft_substr(char const *s, unsigned int start, size_t len);
-char **ft_split(char const *s, char c);
-char *ft_strchr(const char *s, int c);
-char *ft_strtrim(char const *s1, char const *set);
-int ft_strlen(const char *s);
-int ft_atoi(const char *str);
-char *ft_itoa(int n);
-int ft_isalpha(int c);
-int ft_isalnum(int c);
-void ft_putstr_fd(char *s, int fd);
-void *ft_calloc(size_t count, size_t size);
-void ft_bzero(void *s, size_t n);
+
 
 #endif

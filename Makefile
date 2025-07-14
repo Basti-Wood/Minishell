@@ -12,7 +12,7 @@ LIBFT_DIR := libft
 SRC := $(shell find $(SRC_DIR) -name '*.c' ! -name '*_bonus.c')
 OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-LIBFT := $(LIBFT_DIR)/libft.a
+LIBFT := $(LIBFT_DIR)/prelibft.a
 LDLIBS := -L$(LIBFT_DIR) -lft -lreadline
 
 
@@ -20,7 +20,7 @@ all: $(NAME)
 
 $(NAME): $(LIBFT) $(OBJ)
 	@mkdir -p $(@D)
-	$(CC) $(CFLAGS) $(OBJ) $(LDLIBS) -o $@
+	$(CC) $(CFLAGS) $(OBJ) $(LIBFT) -lreadline -o $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(@D)
