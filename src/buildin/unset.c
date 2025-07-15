@@ -17,7 +17,6 @@ int builtin_unset(char **args, t_env_list *env_list)
         {
             if (ft_strcmp(current->key, args[i]) == 0)
             {
-                // Remove node
                 if (prev)
                     prev->next = current->next;
                 else

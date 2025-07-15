@@ -1,7 +1,5 @@
 #include "../include/minishell.h"
 
-
-// Helper functions for environment
 char *get_env_value(t_env_list *env_list, const char *key)
 {
     t_env_node *current = env_list->head;
@@ -19,8 +17,7 @@ char *get_env_value(t_env_list *env_list, const char *key)
 void set_env_value(t_env_list *env_list, const char *key, const char *value)
 {
     t_env_node *current = env_list->head;
-    
-    // Check if key already exists
+
     while (current)
     {
         if (ft_strcmp(current->key, key) == 0)
@@ -31,8 +28,7 @@ void set_env_value(t_env_list *env_list, const char *key, const char *value)
         }
         current = current->next;
     }
-    
-    // Add new node
+
     t_env_node *new_node = malloc(sizeof(t_env_node));
     new_node->key = ft_strdup(key);
     new_node->value = ft_strdup(value);

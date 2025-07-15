@@ -1,13 +1,7 @@
 #include "../include/minishell.h"
 
-// Per the subject, use a single global variable for signal status.
-// 'volatile' ensures the compiler doesn't optimize away access to it,
-// and 'sig_atomic_t' guarantees that reads/writes to it are atomic.
 volatile sig_atomic_t g_signal_status = 0;
 
-// Signal handler now only updates the global variable.
-// This is crucial because functions used inside signal handlers must be async-signal-safe.
-// Functions like printf, malloc, free, and readline are NOT safe.
 void	handle_sigint(int sig)
 {
 	g_signal_status = sig;
@@ -32,27 +26,24 @@ void minishell(char **env)
 
     while (1)
     {
-        // Set up signal handlers for interactive mode
         signal(SIGINT, handle_sigint);
         signal(SIGQUIT, SIG_IGN);
 
-        // Check if a signal was received in the previous loop
         if (g_signal_status == SIGINT)
         {
-            shell.exit_status = 130; // Set exit status for Ctrl-C
-            g_signal_status = 0;     // Reset global signal status
+            shell.exit_status = 130;
+            g_signal_status = 0;
         }
         
         line = readline("minishell> ");
         if (!line)
         {
             printf("exit\n");
-            break; // Ctrl-D was pressed
+            break;
         }
 
         if (g_signal_status == SIGINT)
         {
-            // If Ctrl-C was pressed while readline was active
             rl_replace_line("", 0);
             rl_on_new_line();
             rl_redisplay();
@@ -84,14 +75,8 @@ void minishell(char **env)
                 shell.exit_status = execute_command(cmds, &shell);
             }
         }
-
-        // Free resources
-        // (Your existing free logic for cmds and tokens goes here)
         free(line);
     }
-
-    // Free environment
-    // (Your existing free logic for the environment goes here)
 }
 
 static void heredoc_sigint_handler(int sig)
@@ -110,7 +95,6 @@ int handle_heredoc(char *delimiter, t_shell *shell)
     int expand = 1;
     char *tmp_delim = NULL;
 
-    // Check if delimiter is quoted
     if (delimiter[0] == '\'' || delimiter[0] == '"') {
         expand = 0;
         tmp_delim = ft_strtrim(delimiter, "\"'");
@@ -136,7 +120,8 @@ int handle_heredoc(char *delimiter, t_shell *shell)
         return -1;
     }
 
-    if (pid == 0) {  // Child process
+    if (pid == 0)
+	{
         struct sigaction sa;
         
         sa.sa_handler = heredoc_sigint_handler;
@@ -144,7 +129,7 @@ int handle_heredoc(char *delimiter, t_shell *shell)
         sigemptyset(&sa.sa_mask);
         sigaction(SIGINT, &sa, NULL);
         
-        close(pipefd[0]);  // Close read end
+        close(pipefd[0]);
         
         while (1) {
             line = readline("> ");
@@ -177,8 +162,8 @@ int handle_heredoc(char *delimiter, t_shell *shell)
         close(pipefd[1]);
         exit(0);
     }
-    else {  // Parent process
-        close(pipefd[1]);  // Close write end
+    else {
+        close(pipefd[1]);
         waitpid(pid, &status, 0);
         
         if (tmp_delim) free(tmp_delim);

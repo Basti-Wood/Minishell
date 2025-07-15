@@ -5,6 +5,6 @@ int main(int argc, char **argv, char **env)
     (void)argc;
     (void)argv;
     
-    minishell(env);  // Pass environment to minishell
+    minishell(env);
     return 0;
 }

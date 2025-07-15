@@ -7,7 +7,6 @@ int builtin_cd(char **args, t_env_list *env_list)
     char *old_pwd;
     char current_pwd[1024];
 
-    // Get current directory to set OLDPWD later
     if (getcwd(current_pwd, sizeof(current_pwd)) == NULL)
     {
         perror("cd: getcwd error");
@@ -36,7 +35,6 @@ int builtin_cd(char **args, t_env_list *env_list)
         return 1;
     }
 
-    // Update OLDPWD and PWD
     if (old_pwd)
         set_env_value(env_list, "OLDPWD", old_pwd);
     

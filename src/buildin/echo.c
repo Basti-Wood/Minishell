@@ -4,8 +4,7 @@ int builtin_echo(char **args)
 {
     int i = 1;
     int newline = 1;
-    
-    // Check for -n flag
+
     if (args[1] && ft_strcmp(args[1], "-n") == 0)
     {
         newline = 0;

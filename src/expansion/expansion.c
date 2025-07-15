@@ -1,6 +1,5 @@
 #include "../include/minishell.h"
 
-// A helper to append a character to a dynamic string.
 static void append_char(char **str, char c, int *len, int *capacity)
 {
     if (*len + 1 >= *capacity)
@@ -11,7 +10,6 @@ static void append_char(char **str, char c, int *len, int *capacity)
     (*str)[(*len)++] = c;
 }
 
-// A helper to append a full string.
 static void append_string(char **result, const char *str_to_append, int *len, int *capacity)
 {
     int append_len = ft_strlen(str_to_append);
@@ -32,26 +30,25 @@ char *expand_variables(char *str, t_shell *shell)
     result[0] = '\0';
     
     int i = 0;
-    char in_quote = 0; // 0 = no quote, '\'' or '"' for quote type
+    char in_quote = 0;
 
     while (str[i])
     {
-        // Handle entering/exiting quotes
+
         if ((str[i] == '\'' || str[i] == '"') && !in_quote)
         {
             in_quote = str[i];
             i++;
-            continue; // Don't include the quote in the result
+            continue;
         }
         if (str[i] == in_quote)
         {
             in_quote = 0;
             i++;
-            continue; // Don't include the quote in the result
+            continue;
         }
 
-        // Handle variable expansion
-        if (str[i] == '$' && in_quote != '\'') // Variables expand in double quotes but NOT in single quotes
+        if (str[i] == '$' && in_quote != '\'')
         {
             i++; // Skip '$'
             if (str[i] == '?')
@@ -74,7 +71,6 @@ char *expand_variables(char *str, t_shell *shell)
             }
             else
             {
-                // If $ is not followed by valid variable name, treat it literally
                 append_char(&result, '$', &len, &capacity);
             }
         }

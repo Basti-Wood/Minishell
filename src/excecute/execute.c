@@ -1,4 +1,3 @@
-// execute.c
 #include "../include/minishell.h"
 
 int is_builtin(char *cmd)
@@ -53,16 +52,12 @@ char *find_executable(char *cmd, t_env_list *env_list)
     
     if (!cmd || !env_list)
         return NULL;
-    
-    // If command contains '/', it's a path
     if (ft_strchr(cmd, '/'))
     {
         if (access(cmd, X_OK) == 0)
             return ft_strdup(cmd);
         return NULL;
     }
-    
-    // Get PATH environment variable
     path_env = get_env_value(env_list, "PATH");
     if (!path_env)
         return NULL;
@@ -79,7 +74,7 @@ char *find_executable(char *cmd, t_env_list *env_list)
         full_path = malloc(path_len + cmd_len + 2);
         if (!full_path)
         {
-            // Free paths array
+
             int j = 0;
             while (paths[j])
                 free(paths[j++]);
@@ -93,7 +88,7 @@ char *find_executable(char *cmd, t_env_list *env_list)
         
         if (access(full_path, X_OK) == 0)
         {
-            // Free paths array
+
             int j = 0;
             while (paths[j])
                 free(paths[j++]);
@@ -104,8 +99,7 @@ char *find_executable(char *cmd, t_env_list *env_list)
         free(full_path);
         i++;
     }
-    
-    // Free paths array
+
     i = 0;
     while (paths[i])
         free(paths[i++]);
@@ -184,8 +178,6 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     pid = fork();
     if (pid == 0)
     {
-        // Child process
-        // Handle input/output redirection
         if (cmd->infile)
         {
             int fd = open(cmd->infile, O_RDONLY);
@@ -225,11 +217,8 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     }
     else if (pid > 0)
     {
-        // Parent process
         waitpid(pid, &status, 0);
         free(executable);
-        
-        // Free env_array
         int i = 0;
         while (env_array[i])
             free(env_array[i++]);
@@ -246,7 +235,6 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     {
         perror("fork");
         free(executable);
-        // Free env_array
         if (env_array)
         {
             int i = 0;
@@ -262,11 +250,59 @@ int execute_external(t_cmd *cmd, t_shell *shell)
 
 int execute_command(t_cmd *cmd, t_shell *shell)
 {
+    int stdin_backup = -1;
+    int stdout_backup = -1;
+    int status = 0;
+    
     if (!cmd || !cmd->argv || !cmd->argv[0] || !shell)
         return 0;
+
+    if (cmd->heredoc > 0) {
+        stdin_backup = dup(STDIN_FILENO);
+        dup2(cmd->heredoc, STDIN_FILENO);
+        close(cmd->heredoc);
+    }
+    else if (cmd->infile) {
+        int fd = open(cmd->infile, O_RDONLY);
+        if (fd == -1) {
+            perror(cmd->infile);
+            return 1;
+        }
+        stdin_backup = dup(STDIN_FILENO);
+        dup2(fd, STDIN_FILENO);
+        close(fd);
+    }
+
+    if (cmd->outfile) {
+        int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
+        int fd = open(cmd->outfile, flags, 0644);
+        if (fd == -1) {
+            perror(cmd->outfile);
+            if (stdin_backup != -1) {
+                dup2(stdin_backup, STDIN_FILENO);
+                close(stdin_backup);
+            }
+            return 1;
+        }
+        stdout_backup = dup(STDOUT_FILENO);
+        dup2(fd, STDOUT_FILENO);
+        close(fd);
+    }
+
+    if (is_builtin(cmd->argv[0])) {
+        status = execute_builtin(cmd, shell);
+    } else {
+        status = execute_external(cmd, shell);
+    }
+
+    if (stdin_backup != -1) {
+        dup2(stdin_backup, STDIN_FILENO);
+        close(stdin_backup);
+    }
+    if (stdout_backup != -1) {
+        dup2(stdout_backup, STDOUT_FILENO);
+        close(stdout_backup);
+    }
     
-    if (is_builtin(cmd->argv[0]))
-        return execute_builtin(cmd, shell);
-    else
-        return execute_external(cmd, shell);
+    return status;
 }

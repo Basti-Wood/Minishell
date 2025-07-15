@@ -21,7 +21,6 @@ void type_arg(t_token *token) {
         token->type = ARG;
 }
 
-// Updated token.c functions
 t_token *create_token(char **elements, t_shell *shell)
 {
     t_token *head = NULL;
@@ -45,7 +44,6 @@ t_token *create_token(char **elements, t_shell *shell)
             return NULL;
         }
 
-        // Expand variables in the token if needed
         new_token->str = expand_variables(elements[i], shell);
         new_token->next = NULL;
         new_token->prev = current;

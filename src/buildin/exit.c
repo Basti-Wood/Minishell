@@ -1,6 +1,5 @@
 #include "../include/minishell.h"
 
-// Helper to check if a string is composed only of digits
 static int is_numeric(const char *s)
 {
     if (*s == '+' || *s == '-')
@@ -32,13 +31,10 @@ int builtin_exit(char **args)
         if (args[2])
         {
             fprintf(stderr, "minishell: exit: too many arguments\n");
-            return 1; // Don't exit, just return an error
+            return 1;
         }
         exit_code = ft_atoi(args[1]);
     }
-    
-    // Perform cleanup of your shell's resources here before exiting
-    // e.g., free_env_list(shell->envp);
-    
+
     exit(exit_code % 256);
 }
