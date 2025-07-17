@@ -13,8 +13,7 @@ void minishell(char **env)
     char *line;
     t_token *tokens;
     t_cmd *cmds;
-    
-    // Initialize shell
+
     ft_bzero(&shell, sizeof(t_shell));
     shell.envp = malloc(sizeof(t_env_list));
     if (!shell.envp)
@@ -62,21 +61,20 @@ void minishell(char **env)
             continue;
         }
 
-        cmds = parse_tokens(tokens, &shell);
+		cmds = parse_tokens(tokens, &shell);
+		free_tokens(tokens);
 
         if (cmds)
         {
             if (has_pipe(cmds))
-            {
                 shell.exit_status = execute_pipeline(cmds, &shell);
-            }
             else
-            {
                 shell.exit_status = execute_command(cmds, &shell);
-            }
+			free_cmds(cmds);
         }
         free(line);
     }
+	free_env_list(shell.envp);
 }
 
 static void heredoc_sigint_handler(int sig)

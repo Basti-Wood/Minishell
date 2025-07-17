@@ -114,6 +114,10 @@ int handle_output_redirection(t_cmd *cmd);
 int validate_input_file(const char *filename);
 int validate_output_file(const char *filename);
 
+void free_tokens(t_token *tokens);
+void free_cmds(t_cmd *cmds);
+void free_env_list(t_env_list *env_list);
+
 
 
 #endif
