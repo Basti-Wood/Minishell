@@ -63,7 +63,34 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
                         return NULL;
                     }
                 }
+                else if (tokens->type == INPUT || tokens->type == TRUNC || 
+                         tokens->type == APPEND || tokens->type == HEREDOC)
+                {
+                    // Handle case where redirection operator has no file
+                    fprintf(stderr, "minishell: syntax error near unexpected token `%s'\n", 
+                            tokens->next ? tokens->next->str : "newline");
+                    shell->exit_status = 258;
+                    free(new_cmd->argv);
+                    free(new_cmd);
+                    return NULL;
+                }
+                else
+                {
+                    // Skip unknown tokens to prevent infinite loop
+                    break;
+                }
                 tokens = tokens->next;
+            }
+
+            // Check if we have a valid command (at least one argument)
+            if (argc == 0)
+            {
+                // No command found, this is a syntax error
+                fprintf(stderr, "minishell: syntax error near unexpected token\n");
+                shell->exit_status = 258;
+                free(new_cmd->argv);
+                free(new_cmd);
+                return NULL;
             }
 
             if (!head)
@@ -71,6 +98,20 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
             else
                 current->next = new_cmd;
             current = new_cmd;
+        }
+        else if (tokens->type == INPUT || tokens->type == TRUNC || 
+                 tokens->type == APPEND || tokens->type == HEREDOC)
+        {
+            // Handle redirection operators that appear without a command
+            fprintf(stderr, "minishell: syntax error near unexpected token `%s'\n", tokens->str);
+            shell->exit_status = 258;
+            return NULL;
+        }
+        else
+        {
+            // Skip other token types and advance to prevent infinite loop
+            tokens = tokens->next;
+            continue;
         }
 
         if (tokens && tokens->type == PIPE)
