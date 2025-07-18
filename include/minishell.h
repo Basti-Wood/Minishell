@@ -39,6 +39,12 @@ typedef enum e_redir_type {
     REDIR_HEREDOC
 } t_redir_type;
 
+typedef struct s_redir {
+    char *filename;
+    int type;  // TRUNC or APPEND
+    struct s_redir *next;
+} t_redir;
+
 typedef struct s_token {
     char *str;
     t_token_type type;
@@ -57,6 +63,11 @@ typedef struct s_env_list {
     int size;
 } t_env_list;
 
+typedef struct s_redir_check {
+    char *filename;
+    int append;
+    struct s_redir_check *next;
+} t_redir_check;
 
 typedef struct s_cmd {
     char **argv;
@@ -65,6 +76,7 @@ typedef struct s_cmd {
     int heredoc;
     bool append;
     struct s_cmd *next;
+	t_redir *out_redirs;
 } t_cmd;
 
 typedef struct s_shell {
@@ -91,6 +103,7 @@ t_env_list init_env_list(char **env);
 char *get_env_value(t_env_list *env_list, const char *key);
 void set_env_value(t_env_list *env_list, const char *key, const char *value);
 char **env_list_to_array(t_env_list *env_list);
+t_token *handle_empty_expansions(t_token *tokens);
 
 int builtin_echo(char **args);
 int builtin_cd(char **args, t_env_list *env_list);

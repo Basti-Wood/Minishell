@@ -39,7 +39,7 @@ void minishell(char **env)
         {
             printf("exit\n");
             break;
-        }
+        }    
 
         if (g_signal_status == SIGINT)
         {
@@ -54,12 +54,16 @@ void minishell(char **env)
             add_history(line);
 
         shell.input = line;
-        tokens = tokenize(&shell);
-        if (!tokens)
-        {
-            free(line);
-            continue;
-        }
+		tokens = tokenize(&shell);
+		if (!tokens)
+			continue;
+			
+		// Handle empty expansions
+		tokens = handle_empty_expansions(tokens);
+		if (!tokens)
+			continue;
+
+		// Parse tokens into commands
 
 		cmds = parse_tokens(tokens, &shell);
 		free_tokens(tokens);

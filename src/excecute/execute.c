@@ -156,6 +156,37 @@ char **env_list_to_array(t_env_list *env_list)
     return env_array;
 }
 
+// Helper function to shift argv when first element is empty
+static void shift_argv(char ***argv)
+{
+    int i = 0;
+    
+    // Find first non-empty argument
+    while ((*argv)[i] && (*argv)[i][0] == '\0')
+    {
+        free((*argv)[i]);
+        i++;
+    }
+    
+    if (!(*argv)[i])
+    {
+        // All arguments are empty
+        free((*argv)[0]);
+        (*argv)[0] = NULL;
+        return;
+    }
+    
+    // Shift remaining arguments
+    int j = 0;
+    while ((*argv)[i])
+    {
+        (*argv)[j] = (*argv)[i];
+        j++;
+        i++;
+    }
+    (*argv)[j] = NULL;
+}
+
 int execute_external(t_cmd *cmd, t_shell *shell)
 {
     char *executable;
@@ -163,6 +194,7 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     pid_t pid;
     int status;
     struct stat st;
+    //int redirection_error = 0;
     
     if (!cmd || !cmd->argv || !cmd->argv[0] || !shell)
         return 1;
@@ -170,28 +202,9 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     // Handle empty command (from empty variable expansion)
     if (cmd->argv[0][0] == '\0')
     {
-        // Check if there are more arguments
-        int i = 1;
-        while (cmd->argv[i] && cmd->argv[i][0] == '\0')
-            i++;
-        
-        // If there's a non-empty argument, shift the argv array
-        if (cmd->argv[i])
-        {
-            int j = 0;
-            while (cmd->argv[i])
-            {
-                free(cmd->argv[j]);
-                cmd->argv[j] = cmd->argv[i];
-                cmd->argv[i] = NULL;
-                j++;
-                i++;
-            }
-        }
-        else
-        {
+        shift_argv(&cmd->argv);
+        if (!cmd->argv[0])
             return 0;
-        }
     }
     
     // Check for directory
@@ -231,7 +244,7 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     pid = fork();
     if (pid == 0)
     {
-        // Child process - handle redirections here only
+        // Child process - handle redirections here
         // Input redirection
         if (cmd->heredoc > 0)
         {
@@ -338,79 +351,52 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     return 1;
 }
 
-int execute_command(t_cmd *cmd, t_shell *shell)
+// Execute commands in correct order: validate redirections, create files, then execute
+// This is called for BOTH single commands and commands in pipelines
+static int execute_with_redirections(t_cmd *cmd, t_shell *shell, int in_pipeline)
 {
     int stdin_backup = -1;
     int stdout_backup = -1;
     int status = 0;
     
-    if (!cmd || !cmd->argv || !cmd->argv[0])
-        return 0;
-    
-    // Handle empty command (from empty variable expansion)
-    if (cmd->argv[0][0] == '\0')
-    {
-        // Check if there are more arguments that could be the command
-        int i = 1;
-        while (cmd->argv[i] && cmd->argv[i][0] == '\0')
-            i++;
-        
-        // If there's a non-empty argument, shift the argv array
-        if (cmd->argv[i])
-        {
-            int j = 0;
-            while (cmd->argv[i])
-            {
-                free(cmd->argv[j]);
-                cmd->argv[j] = cmd->argv[i];
-                cmd->argv[i] = NULL;
-                j++;
-                i++;
-            }
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
-    // Validate input redirection first
-    if (cmd->infile && access(cmd->infile, F_OK) == -1)
-    {
-        fprintf(stderr, "minishell: %s: No such file or directory\n", cmd->infile);
-        return 1;
-    }
-
-    // Setup input redirection
+    // Handle heredoc first (already created during parsing)
     if (cmd->heredoc > 0)
     {
         stdin_backup = dup(STDIN_FILENO);
         dup2(cmd->heredoc, STDIN_FILENO);
         close(cmd->heredoc);
     }
-    else if (cmd->infile)
+    
+    // Check input file
+    if (cmd->infile)
     {
         int fd = open(cmd->infile, O_RDONLY);
         if (fd == -1)
         {
-            perror(cmd->infile);
-            shell->exit_status = 1;
-            return 1;
+            if (!in_pipeline)
+                fprintf(stderr, "minishell: %s: No such file or directory\n", cmd->infile);
+            status = 1;
+            // Don't return yet - still need to create output files for single commands
         }
-        stdin_backup = dup(STDIN_FILENO);
-        dup2(fd, STDIN_FILENO);
-        close(fd);
+        else
+        {
+            if (stdin_backup == -1)
+                stdin_backup = dup(STDIN_FILENO);
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+        }
     }
-
-    // Setup output redirection
+    
+    // Handle output file
     if (cmd->outfile)
     {
         int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
         int fd = open(cmd->outfile, flags, 0644);
         if (fd == -1)
         {
-            perror(cmd->outfile);
-            shell->exit_status = 1;
+            if (!in_pipeline)
+                perror(cmd->outfile);
+            // Restore stdin if we changed it
             if (stdin_backup != -1)
             {
                 dup2(stdin_backup, STDIN_FILENO);
@@ -422,22 +408,16 @@ int execute_command(t_cmd *cmd, t_shell *shell)
         dup2(fd, STDOUT_FILENO);
         close(fd);
     }
-
-    // Execute command
-    if (cmd->argv[0] && cmd->argv[0][0] != '\0')
+    
+    // Execute command if we can
+    if (cmd->argv && cmd->argv[0] && cmd->argv[0][0] != '\0' && status == 0)
     {
         if (is_builtin(cmd->argv[0]))
-        {
-            // For builtins in single command mode, we handle redirections here
             status = execute_builtin(cmd, shell);
-        }
         else
-        {
-            // For external commands, redirections are handled in the child process
             status = execute_external(cmd, shell);
-        }
     }
-
+    
     // Restore file descriptors
     if (stdin_backup != -1)
     {
@@ -451,4 +431,20 @@ int execute_command(t_cmd *cmd, t_shell *shell)
     }
     
     return status;
+}
+int execute_command(t_cmd *cmd, t_shell *shell)
+{
+    if (!cmd)
+        return 0;
+    
+    // Handle empty command (from empty variable expansion)
+    if (cmd->argv && cmd->argv[0] && cmd->argv[0][0] == '\0')
+    {
+        shift_argv(&cmd->argv);
+        if (!cmd->argv[0])
+            return 0;
+    }
+    
+    // Use the common execution function
+    return execute_with_redirections(cmd, shell, 0);
 }

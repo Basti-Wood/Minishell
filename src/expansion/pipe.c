@@ -5,7 +5,36 @@ int has_pipe(t_cmd *cmds)
     return (cmds && cmds->next);
 }
 
-
+// Helper function to shift argv when first element is empty
+static void shift_argv_pipeline(char ***argv)
+{
+    int i = 0;
+    
+    // Find first non-empty argument
+    while ((*argv)[i] && (*argv)[i][0] == '\0')
+    {
+        free((*argv)[i]);
+        i++;
+    }
+    
+    if (!(*argv)[i])
+    {
+        // All arguments are empty
+        free((*argv)[0]);
+        (*argv)[0] = NULL;
+        return;
+    }
+    
+    // Shift remaining arguments
+    int j = 0;
+    while ((*argv)[i])
+    {
+        (*argv)[j] = (*argv)[i];
+        j++;
+        i++;
+    }
+    (*argv)[j] = NULL;
+}
 int execute_pipeline(t_cmd *cmds, t_shell *shell)
 {
     int pipefd[2];
@@ -14,7 +43,6 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
     pid_t pid;
     pid_t last_pid = 0;
     t_cmd *current = cmds;
-    
 
     while (current)
     {
@@ -54,7 +82,7 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
                 close(input_fd);
             }
 
-            // Handle output redirection
+            // Handle output redirection - only last one matters
             if (current->outfile)
             {
                 int flags = O_WRONLY | O_CREAT | (current->append ? O_APPEND : O_TRUNC);
@@ -77,6 +105,12 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
             {
                 close(pipefd[0]);
                 close(pipefd[1]);
+            }
+
+            // Handle empty expansion
+            if (current->argv && current->argv[0] && current->argv[0][0] == '\0')
+            {
+                shift_argv_pipeline(&current->argv);
             }
 
             // Execute the command

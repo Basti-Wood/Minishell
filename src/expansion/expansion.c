@@ -15,6 +15,59 @@ char *remove_quote_markers(const char *str)
     return result;
 }
 
+t_token *handle_empty_expansions(t_token *tokens)
+{
+    t_token *head = tokens;
+    t_token *current = tokens;
+    t_token *prev = NULL;
+    
+    while (current)
+    {
+        // Check if this token is empty and it's supposed to be a command
+        if (current->type == CMD && current->str && current->str[0] == '\0')
+        {
+            t_token *to_remove = current;
+            
+            // If there's a next token, it becomes the command
+            if (current->next)
+            {
+                current->next->type = CMD;
+                current = current->next;
+                
+                // Fix the linked list
+                if (prev)
+                    prev->next = current;
+                else
+                    head = current;
+                    
+                current->prev = prev;
+                
+                // Free the empty token
+                free(to_remove->str);
+                free(to_remove);
+                continue;
+            }
+            else
+            {
+                // No more tokens, just remove this one
+                if (prev)
+                    prev->next = NULL;
+                else
+                    head = NULL;
+                    
+                free(to_remove->str);
+                free(to_remove);
+                break;
+            }
+        }
+        
+        prev = current;
+        current = current->next;
+    }
+    
+    return head;
+}
+
 static void append_char(char **str, char c, int *len, int *capacity)
 {
     if (*len + 2 >= *capacity) // +2 for char and null-terminator
