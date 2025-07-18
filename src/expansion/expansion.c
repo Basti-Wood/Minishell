@@ -1,25 +1,39 @@
 #include "../include/minishell.h"
 
+char *remove_quote_markers(const char *str)
+{
+    char *result = malloc(ft_strlen(str) + 1);
+    int j = 0;
+    
+    for (int i = 0; str[i]; i++)
+    {
+        // Skip quote markers
+        if (str[i] != '\001' && str[i] != '\002' && str[i] != '\003' && str[i] != '\004')
+            result[j++] = str[i];
+    }
+    result[j] = '\0';
+    return result;
+}
+
 static void append_char(char **str, char c, int *len, int *capacity)
 {
-    if (*len + 1 >= *capacity)
+    if (*len + 2 >= *capacity) // +2 for char and null-terminator
     {
         *capacity *= 2;
         *str = realloc(*str, *capacity);
     }
     (*str)[(*len)++] = c;
+    (*str)[*len] = '\0';
 }
 
 static void append_string(char **result, const char *str_to_append, int *len, int *capacity)
 {
-    int append_len = ft_strlen(str_to_append);
-    while (*len + append_len >= *capacity)
+    int i = 0;
+    while (str_to_append[i])
     {
-        *capacity *= 2;
-        *result = realloc(*result, *capacity);
+        append_char(result, str_to_append[i], len, capacity);
+        i++;
     }
-    ft_strlcat(*result, str_to_append, *capacity);
-    *len += append_len;
 }
 
 char *expand_variables(char *str, t_shell *shell)
@@ -27,31 +41,50 @@ char *expand_variables(char *str, t_shell *shell)
     int capacity = 128;
     int len = 0;
     char *result = malloc(capacity);
+    if (!result)
+        return NULL;
     result[0] = '\0';
     
     int i = 0;
-    char in_quote = 0;
+    int in_single_quotes = 0;
 
-    while (str[i])
+      while (str[i])
     {
-
-        if ((str[i] == '\'' || str[i] == '"') && !in_quote)
+        // Handle quote markers - DON'T append them to result!
+        if (str[i] == '\001')  // Start single quote marker
         {
-            in_quote = str[i];
+            in_single_quotes = 1;
             i++;
             continue;
         }
-        if (str[i] == in_quote)
+        else if (str[i] == '\003')  // End single quote marker
         {
-            in_quote = 0;
+            in_single_quotes = 0;
+            i++;
+            continue;
+        }
+        else if (str[i] == '\002')  // Start double quote marker
+        {
+            i++;
+            continue;
+        }
+        else if (str[i] == '\004')  // End double quote marker
+        {
             i++;
             continue;
         }
 
-        if (str[i] == '$' && in_quote != '\'')
+        // Handle variable expansion (not in single quotes)
+        if (str[i] == '$' && !in_single_quotes)
         {
             i++; // Skip '$'
-            if (str[i] == '?')
+            
+            if (!str[i])
+            {
+                // Just a dollar sign at end
+                append_char(&result, '$', &len, &capacity);
+            }
+            else if (str[i] == '?')
             {
                 char *exit_str = ft_itoa(shell->exit_status);
                 append_string(&result, exit_str, &len, &capacity);
@@ -67,11 +100,20 @@ char *expand_variables(char *str, t_shell *shell)
                 char *var_value = get_env_value(shell->envp, var_name);
                 if (var_value)
                     append_string(&result, var_value, &len, &capacity);
+                else
+                    append_string(&result, "", &len, &capacity);
                 free(var_name);
+            }
+            else if (ft_isnum(str[i]))
+            {
+                // Skip positional parameters (not supported)
+                i++;
             }
             else
             {
+                // Just a dollar sign followed by non-variable character, treat as literal
                 append_char(&result, '$', &len, &capacity);
+                // Do not increment i here, so the next character is processed as normal
             }
         }
         else
@@ -80,6 +122,7 @@ char *expand_variables(char *str, t_shell *shell)
             i++;
         }
     }
+    
     result[len] = '\0';
-    return (result);
+    return result;
 }

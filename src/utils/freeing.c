@@ -1,5 +1,19 @@
 #include "../include/minishell.h"
 
+#if 0
+void free_redirs(t_redir *redirs) {
+    t_redir *tmp;
+    while (redirs) {
+        tmp = redirs->next;
+        if (redirs->filename)
+            free(redirs->filename);
+        free(redirs);
+        redirs = tmp;
+    }
+}
+#endif
+#include "../include/minishell.h"
+
 
 void free_tokens(t_token *tokens)
 {
@@ -20,8 +34,6 @@ void free_cmds(t_cmd *cmds)
     {
         tmp = cmds;
         cmds = cmds->next;
-        
-        // Free argv array
         if (tmp->argv)
         {
             int i = 0;
@@ -29,17 +41,12 @@ void free_cmds(t_cmd *cmds)
                 free(tmp->argv[i++]);
             free(tmp->argv);
         }
-        
-        // Free file names
         if (tmp->infile)
             free(tmp->infile);
         if (tmp->outfile)
             free(tmp->outfile);
-            
-        // Close heredoc fd if still open
         if (tmp->heredoc > 0)
             close(tmp->heredoc);
-            
         free(tmp);
     }
 }
@@ -48,7 +55,6 @@ void free_env_list(t_env_list *env_list)
 {
     t_env_node *current = env_list->head;
     t_env_node *tmp;
-    
     while (current)
     {
         tmp = current;
@@ -57,7 +63,6 @@ void free_env_list(t_env_list *env_list)
         free(tmp->value);
         free(tmp);
     }
-    
     free(env_list);
 }
 

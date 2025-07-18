@@ -32,6 +32,13 @@ typedef enum e_token_type {
     END = 8
 } t_token_type;
 
+typedef enum e_redir_type {
+    REDIR_INPUT,
+    REDIR_OUTPUT,
+    REDIR_APPEND,
+    REDIR_HEREDOC
+} t_redir_type;
+
 typedef struct s_token {
     char *str;
     t_token_type type;
@@ -49,6 +56,7 @@ typedef struct s_env_list {
     t_env_node *head;
     int size;
 } t_env_list;
+
 
 typedef struct s_cmd {
     char **argv;
@@ -75,6 +83,7 @@ t_token *token_split(char *input);
 t_token *create_token(char **elements, t_shell *shell);
 void type_arg(t_token *token);
 char **ft_split_quotes(const char *input);
+int handle_quoted_string(const char *s, int i, char quote, char **result);
 
 t_cmd *parse_tokens(t_token *tokens, t_shell *shell);
 
@@ -108,6 +117,7 @@ char *ft_strcat(char *dest, const char *src);
 int ft_isspace(int c);
 int	ft_isnum(int c);
 size_t	ft_strlcat(char *dst, const char *src, size_t dstsize);
+char *remove_quote_markers(const char *str);
 
 int handle_input_redirection(t_cmd *cmd);
 int handle_output_redirection(t_cmd *cmd);

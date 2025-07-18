@@ -178,13 +178,3 @@ int handle_heredoc(char *delimiter, t_shell *shell)
     }
 }
 
-int has_pipe(t_cmd *cmds)
-{
-    while (cmds)
-    {
-        if (cmds->next)
-            return 1;
-        cmds = cmds->next;
-    }
-    return 0;
-}

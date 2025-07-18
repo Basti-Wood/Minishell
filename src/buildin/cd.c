@@ -7,6 +7,12 @@ int builtin_cd(char **args, t_env_list *env_list)
     char *old_pwd;
     char current_pwd[1024];
 
+	if (args[1] && args[2])
+    {
+        fprintf(stderr, "minishell: cd: too many arguments\n");
+        return 1;
+    }
+
     if (getcwd(current_pwd, sizeof(current_pwd)) == NULL)
     {
         perror("cd: getcwd error");

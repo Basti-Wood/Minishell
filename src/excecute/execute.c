@@ -49,15 +49,23 @@ char *find_executable(char *cmd, t_env_list *env_list)
     char **paths;
     char *full_path;
     int i;
+    struct stat st;
     
     if (!cmd || !env_list)
         return NULL;
+        
+    // Handle absolute or relative paths
     if (ft_strchr(cmd, '/'))
     {
-        if (access(cmd, X_OK) == 0)
+        if (access(cmd, F_OK) == 0)
+        {
+            if (stat(cmd, &st) == 0 && S_ISDIR(st.st_mode))
+                return NULL;
             return ft_strdup(cmd);
+        }
         return NULL;
     }
+    
     path_env = get_env_value(env_list, "PATH");
     if (!path_env)
         return NULL;
@@ -74,7 +82,6 @@ char *find_executable(char *cmd, t_env_list *env_list)
         full_path = malloc(path_len + cmd_len + 2);
         if (!full_path)
         {
-
             int j = 0;
             while (paths[j])
                 free(paths[j++]);
@@ -88,7 +95,6 @@ char *find_executable(char *cmd, t_env_list *env_list)
         
         if (access(full_path, X_OK) == 0)
         {
-
             int j = 0;
             while (paths[j])
                 free(paths[j++]);
@@ -133,7 +139,6 @@ char **env_list_to_array(t_env_list *env_list)
         env_array[i] = malloc(key_len + value_len + 2);
         if (!env_array[i])
         {
-            // Free previously allocated strings
             for (int j = 0; j < i; j++)
                 free(env_array[j]);
             free(env_array);
@@ -157,9 +162,57 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     char **env_array;
     pid_t pid;
     int status;
+    struct stat st;
     
     if (!cmd || !cmd->argv || !cmd->argv[0] || !shell)
         return 1;
+    
+    // Handle empty command (from empty variable expansion)
+    if (cmd->argv[0][0] == '\0')
+    {
+        // Check if there are more arguments
+        int i = 1;
+        while (cmd->argv[i] && cmd->argv[i][0] == '\0')
+            i++;
+        
+        // If there's a non-empty argument, shift the argv array
+        if (cmd->argv[i])
+        {
+            int j = 0;
+            while (cmd->argv[i])
+            {
+                free(cmd->argv[j]);
+                cmd->argv[j] = cmd->argv[i];
+                cmd->argv[i] = NULL;
+                j++;
+                i++;
+            }
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
+    // Check for directory
+    if (ft_strchr(cmd->argv[0], '/'))
+    {
+        if (stat(cmd->argv[0], &st) == 0 && S_ISDIR(st.st_mode))
+        {
+            fprintf(stderr, "minishell: %s: Is a directory\n", cmd->argv[0]);
+            return 126;
+        }
+        else if (access(cmd->argv[0], F_OK) != 0)
+        {
+            fprintf(stderr, "minishell: %s: No such file or directory\n", cmd->argv[0]);
+            return 127;
+        }
+        else if (access(cmd->argv[0], X_OK) != 0)
+        {
+            fprintf(stderr, "minishell: %s: Permission denied\n", cmd->argv[0]);
+            return 126;
+        }
+    }
     
     executable = find_executable(cmd->argv[0], shell->envp);
     if (!executable)
@@ -178,7 +231,14 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     pid = fork();
     if (pid == 0)
     {
-        if (cmd->infile)
+        // Child process - handle redirections here only
+        // Input redirection
+        if (cmd->heredoc > 0)
+        {
+            dup2(cmd->heredoc, STDIN_FILENO);
+            close(cmd->heredoc);
+        }
+        else if (cmd->infile)
         {
             int fd = open(cmd->infile, O_RDONLY);
             if (fd == -1)
@@ -190,6 +250,7 @@ int execute_external(t_cmd *cmd, t_shell *shell)
             close(fd);
         }
         
+        // Output redirection
         if (cmd->outfile)
         {
             int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
@@ -203,14 +264,43 @@ int execute_external(t_cmd *cmd, t_shell *shell)
             close(fd);
         }
         
-        if (cmd->heredoc > 0)
-        {
-            dup2(cmd->heredoc, STDIN_FILENO);
-            close(cmd->heredoc);
-        }
-        
         if (execve(executable, cmd->argv, env_array) == -1)
         {
+            // Check if file is not executable
+            if (errno == ENOEXEC)
+            {
+                // Try to execute as shell script
+                char *sh_argv[4];
+                sh_argv[0] = "/bin/sh";
+                sh_argv[1] = executable;
+                sh_argv[2] = NULL;
+                
+                // Copy remaining arguments
+                if (cmd->argv[1])
+                {
+                    int argc = 0;
+                    while (cmd->argv[argc])
+                        argc++;
+                    
+                    char **new_argv = malloc(sizeof(char *) * (argc + 2));
+                    new_argv[0] = "/bin/sh";
+                    new_argv[1] = executable;
+                    for (int j = 1; j < argc; j++)
+                        new_argv[j + 1] = cmd->argv[j];
+                    new_argv[argc + 1] = NULL;
+                    
+                    execve("/bin/sh", new_argv, env_array);
+                    free(new_argv);
+                }
+                else
+                {
+                    execve("/bin/sh", sh_argv, env_array);
+                }
+                
+                // If still fails, exit with 126
+                fprintf(stderr, "minishell: %s: Exec format error\n", executable);
+                exit(126);
+            }
             perror("execve");
             exit(126);
         }
@@ -254,18 +344,57 @@ int execute_command(t_cmd *cmd, t_shell *shell)
     int stdout_backup = -1;
     int status = 0;
     
-    if (!cmd || !cmd->argv || !cmd->argv[0] || !shell)
+    if (!cmd || !cmd->argv || !cmd->argv[0])
         return 0;
+    
+    // Handle empty command (from empty variable expansion)
+    if (cmd->argv[0][0] == '\0')
+    {
+        // Check if there are more arguments that could be the command
+        int i = 1;
+        while (cmd->argv[i] && cmd->argv[i][0] == '\0')
+            i++;
+        
+        // If there's a non-empty argument, shift the argv array
+        if (cmd->argv[i])
+        {
+            int j = 0;
+            while (cmd->argv[i])
+            {
+                free(cmd->argv[j]);
+                cmd->argv[j] = cmd->argv[i];
+                cmd->argv[i] = NULL;
+                j++;
+                i++;
+            }
+        }
+        else
+        {
+            return 0;
+        }
+    }
 
-    if (cmd->heredoc > 0) {
+    // Validate input redirection first
+    if (cmd->infile && access(cmd->infile, F_OK) == -1)
+    {
+        fprintf(stderr, "minishell: %s: No such file or directory\n", cmd->infile);
+        return 1;
+    }
+
+    // Setup input redirection
+    if (cmd->heredoc > 0)
+    {
         stdin_backup = dup(STDIN_FILENO);
         dup2(cmd->heredoc, STDIN_FILENO);
         close(cmd->heredoc);
     }
-    else if (cmd->infile) {
+    else if (cmd->infile)
+    {
         int fd = open(cmd->infile, O_RDONLY);
-        if (fd == -1) {
+        if (fd == -1)
+        {
             perror(cmd->infile);
+            shell->exit_status = 1;
             return 1;
         }
         stdin_backup = dup(STDIN_FILENO);
@@ -273,12 +402,17 @@ int execute_command(t_cmd *cmd, t_shell *shell)
         close(fd);
     }
 
-    if (cmd->outfile) {
+    // Setup output redirection
+    if (cmd->outfile)
+    {
         int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
         int fd = open(cmd->outfile, flags, 0644);
-        if (fd == -1) {
+        if (fd == -1)
+        {
             perror(cmd->outfile);
-            if (stdin_backup != -1) {
+            shell->exit_status = 1;
+            if (stdin_backup != -1)
+            {
                 dup2(stdin_backup, STDIN_FILENO);
                 close(stdin_backup);
             }
@@ -289,17 +423,29 @@ int execute_command(t_cmd *cmd, t_shell *shell)
         close(fd);
     }
 
-    if (is_builtin(cmd->argv[0])) {
-        status = execute_builtin(cmd, shell);
-    } else {
-        status = execute_external(cmd, shell);
+    // Execute command
+    if (cmd->argv[0] && cmd->argv[0][0] != '\0')
+    {
+        if (is_builtin(cmd->argv[0]))
+        {
+            // For builtins in single command mode, we handle redirections here
+            status = execute_builtin(cmd, shell);
+        }
+        else
+        {
+            // For external commands, redirections are handled in the child process
+            status = execute_external(cmd, shell);
+        }
     }
 
-    if (stdin_backup != -1) {
+    // Restore file descriptors
+    if (stdin_backup != -1)
+    {
         dup2(stdin_backup, STDIN_FILENO);
         close(stdin_backup);
     }
-    if (stdout_backup != -1) {
+    if (stdout_backup != -1)
+    {
         dup2(stdout_backup, STDOUT_FILENO);
         close(stdout_backup);
     }

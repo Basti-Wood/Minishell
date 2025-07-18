@@ -1,5 +1,22 @@
 #include "../../include/minishell.h"
 
+// For multiple output redirections, create all files but only the last is used for output
+static void handle_multiple_redirections(t_cmd *cmd, t_token *token)
+{
+    if (cmd->outfile)
+    {
+        int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
+        int fd = open(cmd->outfile, flags, 0644);
+        if (fd != -1)
+            close(fd);
+        free(cmd->outfile);
+    }
+    cmd->outfile = remove_quote_markers(token->str);
+    cmd->append = (token->prev->type == APPEND);
+}
+#include "../../include/minishell.h"
+
+
 t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
 {
     t_cmd *head = NULL;
@@ -20,43 +37,31 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
                 if (tokens->type == CMD || tokens->type == ARG)
                 {
                     new_cmd->argv = realloc(new_cmd->argv, (argc + 2) * sizeof(char *));
-                    new_cmd->argv[argc++] = ft_strdup(tokens->str);
+                    new_cmd->argv[argc++] = remove_quote_markers(tokens->str);
                     new_cmd->argv[argc] = NULL;
                 }
                 else if (tokens->type == INPUT && tokens->next)
                 {
                     tokens = tokens->next;
-                    if (new_cmd->infile) {
+                    if (new_cmd->infile)
                         free(new_cmd->infile);
-                    }
-                    new_cmd->infile = ft_strdup(tokens->str);
-
-                    if (!validate_input_file(new_cmd->infile)) {
-                        shell->exit_status = 1;
-                    }
+                    new_cmd->infile = remove_quote_markers(tokens->str);
                 }
                 else if ((tokens->type == TRUNC || tokens->type == APPEND) && tokens->next)
                 {
                     tokens = tokens->next;
-
-                    if (new_cmd->outfile) {
-                        free(new_cmd->outfile);
-                    }
-                    new_cmd->outfile = ft_strdup(tokens->str);
-                    new_cmd->append = (tokens->prev->type == APPEND);
-
-                    if (!validate_output_file(new_cmd->outfile)) {
-                        shell->exit_status = 1;
-                    }
+                    handle_multiple_redirections(new_cmd, tokens);
                 }
                 else if (tokens->type == HEREDOC && tokens->next)
                 {
                     tokens = tokens->next;
-                    if (new_cmd->heredoc > 0) {
+                    if (new_cmd->heredoc > 0)
                         close(new_cmd->heredoc);
-                    }
-                    new_cmd->heredoc = handle_heredoc(tokens->str, shell);
-                    if (new_cmd->heredoc == -1) {
+                    char *delimiter = remove_quote_markers(tokens->str);
+                    new_cmd->heredoc = handle_heredoc(delimiter, shell);
+                    free(delimiter);
+                    if (new_cmd->heredoc == -1)
+                    {
                         shell->exit_status = 130;
                         free(new_cmd->argv);
                         free(new_cmd);
@@ -66,30 +71,27 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
                 else if (tokens->type == INPUT || tokens->type == TRUNC || 
                          tokens->type == APPEND || tokens->type == HEREDOC)
                 {
-                    // Handle case where redirection operator has no file
                     fprintf(stderr, "minishell: syntax error near unexpected token `%s'\n", 
                             tokens->next ? tokens->next->str : "newline");
                     shell->exit_status = 258;
-                    free(new_cmd->argv);
-                    free(new_cmd);
+                        free(new_cmd->argv);
+                        free(new_cmd);
                     return NULL;
                 }
                 else
                 {
-                    // Skip unknown tokens to prevent infinite loop
                     break;
                 }
                 tokens = tokens->next;
             }
 
-            // Check if we have a valid command (at least one argument)
             if (argc == 0)
             {
-                // No command found, this is a syntax error
-                fprintf(stderr, "minishell: syntax error near unexpected token\n");
+                fprintf(stderr, "minishell: syntax error near unexpected token `%s'\n", 
+                        tokens && tokens->str ? tokens->str : "newline");
                 shell->exit_status = 258;
-                free(new_cmd->argv);
-                free(new_cmd);
+                    free(new_cmd->argv);
+                    free(new_cmd);
                 return NULL;
             }
 
@@ -102,14 +104,12 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
         else if (tokens->type == INPUT || tokens->type == TRUNC || 
                  tokens->type == APPEND || tokens->type == HEREDOC)
         {
-            // Handle redirection operators that appear without a command
             fprintf(stderr, "minishell: syntax error near unexpected token `%s'\n", tokens->str);
             shell->exit_status = 258;
             return NULL;
         }
         else
         {
-            // Skip other token types and advance to prevent infinite loop
             tokens = tokens->next;
             continue;
         }
