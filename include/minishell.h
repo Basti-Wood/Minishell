@@ -41,7 +41,7 @@ typedef enum e_redir_type {
 
 typedef struct s_redir {
     char *filename;
-    int type;  // TRUNC or APPEND
+    t_redir_type type;  // REDIR_INPUT, REDIR_OUTPUT, REDIR_APPEND, REDIR_HEREDOC
     struct s_redir *next;
 } t_redir;
 
@@ -63,20 +63,13 @@ typedef struct s_env_list {
     int size;
 } t_env_list;
 
-typedef struct s_redir_check {
-    char *filename;
-    int append;
-    struct s_redir_check *next;
-} t_redir_check;
 
 typedef struct s_cmd {
     char **argv;
-    char *infile;
-    char *outfile;
+    t_redir *infiles;   // Linked list of input redirections
+    t_redir *outfiles;  // Linked list of output redirections (type: TRUNC or APPEND)
     int heredoc;
-    bool append;
     struct s_cmd *next;
-	t_redir *out_redirs;
 } t_cmd;
 
 typedef struct s_shell {
@@ -119,6 +112,8 @@ int execute_external(t_cmd *cmd, t_shell *shell);
 int execute_pipeline(t_cmd *cmds, t_shell *shell);
 int is_builtin(char *cmd);
 char *find_executable(char *cmd, t_env_list *env_list);
+int redirect_input(t_cmd *cmd);
+int redirect_output(t_cmd *cmd);
 
 char *expand_variables(char *str, t_shell *shell);
 

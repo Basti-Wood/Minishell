@@ -245,36 +245,52 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     if (pid == 0)
     {
         // Child process - handle redirections here
-        // Input redirection
-        if (cmd->heredoc > 0)
-        {
+        // Input redirections (including heredoc)
+        int fd = -1;
+        t_redir *redir;
+        if (cmd->infiles) {
+            for (redir = cmd->infiles; redir; redir = redir->next) {
+                if (redir->type == REDIR_INPUT) {
+                    int tmp_fd = open(redir->filename, O_RDONLY);
+                    if (tmp_fd == -1) {
+                        perror(redir->filename);
+                        exit(1);
+                    }
+                    if (fd != -1) close(fd);
+                    fd = tmp_fd;
+                }
+            }
+            if (fd != -1) {
+                dup2(fd, STDIN_FILENO);
+                close(fd);
+            }
+        }
+        if (cmd->heredoc > 0) {
             dup2(cmd->heredoc, STDIN_FILENO);
             close(cmd->heredoc);
         }
-        else if (cmd->infile)
-        {
-            int fd = open(cmd->infile, O_RDONLY);
-            if (fd == -1)
-            {
-                perror(cmd->infile);
-                exit(1);
+
+        // Output redirections
+        fd = -1;
+        if (cmd->outfiles) {
+            for (redir = cmd->outfiles; redir; redir = redir->next) {
+                int flags = O_WRONLY | O_CREAT;
+                if (redir->type == REDIR_APPEND)
+                    flags |= O_APPEND;
+                else
+                    flags |= O_TRUNC;
+                int tmp_fd = open(redir->filename, flags, 0644);
+                if (tmp_fd == -1) {
+                    perror(redir->filename);
+                    exit(1);
+                }
+                if (fd != -1) close(fd);
+                fd = tmp_fd;
             }
-            dup2(fd, STDIN_FILENO);
-            close(fd);
-        }
-        
-        // Output redirection
-        if (cmd->outfile)
-        {
-            int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
-            int fd = open(cmd->outfile, flags, 0644);
-            if (fd == -1)
-            {
-                perror(cmd->outfile);
-                exit(1);
+            if (fd != -1) {
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
             }
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
         }
         
         if (execve(executable, cmd->argv, env_array) == -1)
@@ -353,83 +369,88 @@ int execute_external(t_cmd *cmd, t_shell *shell)
 
 // Execute commands in correct order: validate redirections, create files, then execute
 // This is called for BOTH single commands and commands in pipelines
-static int execute_with_redirections(t_cmd *cmd, t_shell *shell, int in_pipeline)
+// Updated to handle multiple redirections using t_redir linked lists
+static int execute_with_redirections(t_cmd *cmd, t_shell *shell)
 {
     int stdin_backup = -1;
     int stdout_backup = -1;
     int status = 0;
-    
-    // Handle heredoc first (already created during parsing)
-    if (cmd->heredoc > 0)
-    {
-        stdin_backup = dup(STDIN_FILENO);
-        dup2(cmd->heredoc, STDIN_FILENO);
-        close(cmd->heredoc);
-    }
-    
-    // Check input file
-    if (cmd->infile)
-    {
-        int fd = open(cmd->infile, O_RDONLY);
-        if (fd == -1)
-        {
-            if (!in_pipeline)
-                fprintf(stderr, "minishell: %s: No such file or directory\n", cmd->infile);
-            status = 1;
-            // Don't return yet - still need to create output files for single commands
+    int fd = -1;
+    t_redir *redir;
+
+    // Handle all input redirections (including heredoc if present)
+    if (cmd->infiles) {
+        for (redir = cmd->infiles; redir; redir = redir->next) {
+            if (redir->type == REDIR_INPUT) {
+                int tmp_fd = open(redir->filename, O_RDONLY);
+                if (tmp_fd == -1) {
+                    perror(redir->filename);
+                    if (fd != -1) close(fd);
+                    status = 1;
+                    goto cleanup;
+                }
+                if (fd != -1) close(fd);
+                fd = tmp_fd;
+            }
+            // If you want to support heredoc as a redir, handle here
         }
-        else
-        {
-            if (stdin_backup == -1)
-                stdin_backup = dup(STDIN_FILENO);
+        if (fd != -1) {
+            stdin_backup = dup(STDIN_FILENO);
             dup2(fd, STDIN_FILENO);
             close(fd);
         }
     }
-    
-    // Handle output file
-    if (cmd->outfile)
-    {
-        int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
-        int fd = open(cmd->outfile, flags, 0644);
-        if (fd == -1)
-        {
-            if (!in_pipeline)
-                perror(cmd->outfile);
-            // Restore stdin if we changed it
-            if (stdin_backup != -1)
-            {
-                dup2(stdin_backup, STDIN_FILENO);
-                close(stdin_backup);
-            }
-            return 1;
-        }
-        stdout_backup = dup(STDOUT_FILENO);
-        dup2(fd, STDOUT_FILENO);
-        close(fd);
+    // If heredoc is present (legacy int), handle it as highest priority
+    if (cmd->heredoc > 0) {
+        stdin_backup = dup(STDIN_FILENO);
+        dup2(cmd->heredoc, STDIN_FILENO);
+        close(cmd->heredoc);
     }
-    
-    // Execute command if we can
-    if (cmd->argv && cmd->argv[0] && cmd->argv[0][0] != '\0' && status == 0)
-    {
+
+    // Handle all output redirections
+    fd = -1;
+    if (cmd->outfiles) {
+        for (redir = cmd->outfiles; redir; redir = redir->next) {
+            int flags = O_WRONLY | O_CREAT;
+            if (redir->type == REDIR_APPEND)
+                flags |= O_APPEND;
+            else
+                flags |= O_TRUNC;
+            int tmp_fd = open(redir->filename, flags, 0644);
+            if (tmp_fd == -1) {
+                perror(redir->filename);
+                if (fd != -1) close(fd);
+                status = 1;
+                goto cleanup;
+            }
+            if (fd != -1) close(fd);
+            fd = tmp_fd;
+        }
+        if (fd != -1) {
+            stdout_backup = dup(STDOUT_FILENO);
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        }
+    }
+
+    // Execute command if redirections succeeded
+    if (cmd->argv && cmd->argv[0] && cmd->argv[0][0] != '\0' && status == 0) {
         if (is_builtin(cmd->argv[0]))
             status = execute_builtin(cmd, shell);
         else
             status = execute_external(cmd, shell);
     }
-    
-    // Restore file descriptors
-    if (stdin_backup != -1)
-    {
+
+cleanup:
+    // Reset file descriptors
+    if (stdin_backup != -1) {
         dup2(stdin_backup, STDIN_FILENO);
         close(stdin_backup);
     }
-    if (stdout_backup != -1)
-    {
+    if (stdout_backup != -1) {
         dup2(stdout_backup, STDOUT_FILENO);
         close(stdout_backup);
     }
-    
     return status;
 }
 int execute_command(t_cmd *cmd, t_shell *shell)
@@ -446,5 +467,5 @@ int execute_command(t_cmd *cmd, t_shell *shell)
     }
     
     // Use the common execution function
-    return execute_with_redirections(cmd, shell, 0);
+    return execute_with_redirections(cmd, shell);
 }

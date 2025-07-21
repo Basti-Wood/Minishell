@@ -59,44 +59,58 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
             signal(SIGINT, SIG_DFL);
             signal(SIGQUIT, SIG_DFL);
 
-            // Handle input redirection
-            if (current->heredoc > 0)
-            {
+            // Handle input redirections (including heredoc)
+            int fd = -1;
+            t_redir *redir;
+            if (current->infiles) {
+                for (redir = current->infiles; redir; redir = redir->next) {
+                    if (redir->type == REDIR_INPUT) {
+                        int tmp_fd = open(redir->filename, O_RDONLY);
+                        if (tmp_fd == -1) {
+                            perror(redir->filename);
+                            if (fd != -1) close(fd);
+                            exit(1);
+                        }
+                        if (fd != -1) close(fd);
+                        fd = tmp_fd;
+                    }
+                }
+                if (fd != -1) {
+                    dup2(fd, STDIN_FILENO);
+                    close(fd);
+                }
+            }
+            if (current->heredoc > 0) {
                 dup2(current->heredoc, STDIN_FILENO);
                 close(current->heredoc);
-            }
-            else if (current->infile)
-            {
-                int fd = open(current->infile, O_RDONLY);
-                if (fd == -1)
-                {
-                    perror(current->infile);
-                    exit(1);
-                }
-                dup2(fd, STDIN_FILENO);
-                close(fd);
-            }
-            else if (input_fd != STDIN_FILENO)
-            {
+            } else if (input_fd != STDIN_FILENO) {
                 dup2(input_fd, STDIN_FILENO);
                 close(input_fd);
             }
 
-            // Handle output redirection - only last one matters
-            if (current->outfile)
-            {
-                int flags = O_WRONLY | O_CREAT | (current->append ? O_APPEND : O_TRUNC);
-                int fd = open(current->outfile, flags, 0644);
-                if (fd == -1)
-                {
-                    perror(current->outfile);
-                    exit(1);
+            // Handle output redirections - only last one matters
+            fd = -1;
+            if (current->outfiles) {
+                for (redir = current->outfiles; redir; redir = redir->next) {
+                    int flags = O_WRONLY | O_CREAT;
+                    if (redir->type == REDIR_APPEND)
+                        flags |= O_APPEND;
+                    else
+                        flags |= O_TRUNC;
+                    int tmp_fd = open(redir->filename, flags, 0644);
+                    if (tmp_fd == -1) {
+                        perror(redir->filename);
+                        if (fd != -1) close(fd);
+                        exit(1);
+                    }
+                    if (fd != -1) close(fd);
+                    fd = tmp_fd;
                 }
-                dup2(fd, STDOUT_FILENO);
-                close(fd);
-            }
-            else if (current->next)
-            {
+                if (fd != -1) {
+                    dup2(fd, STDOUT_FILENO);
+                    close(fd);
+                }
+            } else if (current->next) {
                 dup2(pipefd[1], STDOUT_FILENO);
             }
 

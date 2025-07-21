@@ -2,6 +2,32 @@
 
 int handle_input_redirection(t_cmd *cmd)
 {
+    int fd = -1;
+    t_redir *redir;
+    // Handle all input redirections
+    if (cmd->infiles) {
+        for (redir = cmd->infiles; redir; redir = redir->next) {
+            if (redir->type == REDIR_INPUT) {
+                int tmp_fd = open(redir->filename, O_RDONLY);
+                if (tmp_fd == -1) {
+                    perror(redir->filename);
+                    if (fd != -1) close(fd);
+                    return -1;
+                }
+                if (fd != -1) close(fd);
+                fd = tmp_fd;
+            }
+        }
+        if (fd != -1) {
+            if (dup2(fd, STDIN_FILENO) == -1) {
+                perror("dup2 input");
+                close(fd);
+                return -1;
+            }
+            close(fd);
+        }
+    }
+    // Handle heredoc as highest priority if present
     if (cmd->heredoc > 0) {
         if (dup2(cmd->heredoc, STDIN_FILENO) == -1) {
             perror("dup2 heredoc");
@@ -9,37 +35,37 @@ int handle_input_redirection(t_cmd *cmd)
         }
         close(cmd->heredoc);
     }
-    else if (cmd->infile) {
-        int fd = open(cmd->infile, O_RDONLY);
-        if (fd == -1) {
-            perror(cmd->infile);
-            return -1;
-        }
-        if (dup2(fd, STDIN_FILENO) == -1) {
-            perror("dup2 input");
-            close(fd);
-            return -1;
-        }
-        close(fd);
-    }
     return 0;
 }
 
 int handle_output_redirection(t_cmd *cmd)
 {
-    if (cmd->outfile) {
-        int flags = O_WRONLY | O_CREAT | (cmd->append ? O_APPEND : O_TRUNC);
-        int fd = open(cmd->outfile, flags, 0644);
-        if (fd == -1) {
-            perror(cmd->outfile);
-            return -1;
+    int fd = -1;
+    t_redir *redir;
+    if (cmd->outfiles) {
+        for (redir = cmd->outfiles; redir; redir = redir->next) {
+            int flags = O_WRONLY | O_CREAT;
+            if (redir->type == REDIR_APPEND)
+                flags |= O_APPEND;
+            else
+                flags |= O_TRUNC;
+            int tmp_fd = open(redir->filename, flags, 0644);
+            if (tmp_fd == -1) {
+                perror(redir->filename);
+                if (fd != -1) close(fd);
+                return -1;
+            }
+            if (fd != -1) close(fd);
+            fd = tmp_fd;
         }
-        if (dup2(fd, STDOUT_FILENO) == -1) {
-            perror("dup2 output");
+        if (fd != -1) {
+            if (dup2(fd, STDOUT_FILENO) == -1) {
+                perror("dup2 output");
+                close(fd);
+                return -1;
+            }
             close(fd);
-            return -1;
         }
-        close(fd);
     }
     return 0;
 }

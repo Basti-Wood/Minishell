@@ -41,10 +41,25 @@ void free_cmds(t_cmd *cmds)
                 free(tmp->argv[i++]);
             free(tmp->argv);
         }
-        if (tmp->infile)
-            free(tmp->infile);
-        if (tmp->outfile)
-            free(tmp->outfile);
+        // Free infiles linked list
+        t_redir *r, *rnext;
+        r = tmp->infiles;
+        while (r) {
+            rnext = r->next;
+            if (r->filename)
+                free(r->filename);
+            free(r);
+            r = rnext;
+        }
+        // Free outfiles linked list
+        r = tmp->outfiles;
+        while (r) {
+            rnext = r->next;
+            if (r->filename)
+                free(r->filename);
+            free(r);
+            r = rnext;
+        }
         if (tmp->heredoc > 0)
             close(tmp->heredoc);
         free(tmp);
