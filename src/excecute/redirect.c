@@ -70,6 +70,45 @@ int handle_output_redirection(t_cmd *cmd)
     return 0;
 }
 
+// NEW FUNCTION: Validate input files before creating any output files
+int validate_input_files_before_output(t_cmd *cmd)
+{
+    t_redir *redir;
+    
+    // Check all input files in the ordered redirs list (from parser)
+    if (cmd->redirs) {
+        for (redir = cmd->redirs; redir; redir = redir->next) {
+            if (redir->type == REDIR_INPUT) {
+                if (access(redir->filename, F_OK) == -1) {
+                    fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                    return -1;
+                }
+                if (access(redir->filename, R_OK) == -1) {
+                    fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                    return -1;
+                }
+            }
+        }
+    }
+    
+    // Also check the infiles list for backward compatibility
+    if (cmd->infiles) {
+        for (redir = cmd->infiles; redir; redir = redir->next) {
+            if (redir->type == REDIR_INPUT) {
+                if (access(redir->filename, F_OK) == -1) {
+                    fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                    return -1;
+                }
+                if (access(redir->filename, R_OK) == -1) {
+                    fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                    return -1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
 int validate_input_file(const char *filename)
 {
     if (access(filename, F_OK) == -1) {
@@ -98,4 +137,33 @@ int validate_output_file(const char *filename)
     }
     free(dir);
     return 1;
+}
+
+// MISSING FUNCTION: Remove quote markers from tokenized strings
+char *remove_quote_markers(const char *str)
+{
+    if (!str)
+        return NULL;
+        
+    int len = ft_strlen(str);
+    char *result = malloc(len + 1);
+    if (!result)
+        return NULL;
+        
+    int i = 0, j = 0;
+    
+    while (str[i])
+    {
+        // Skip quote markers
+        if (str[i] == '\001' || str[i] == '\002' || str[i] == '\003' || str[i] == '\004')
+        {
+            i++;
+            continue;
+        }
+        
+        result[j++] = str[i++];
+    }
+    
+    result[j] = '\0';
+    return result;
 }

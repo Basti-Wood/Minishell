@@ -1,11 +1,11 @@
 #include "../../include/minishell.h"
 
+// Updated parser.c - focusing on the redirection handling part
 
 t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
 {
     t_cmd *head = NULL;
     t_cmd *current = NULL;
-    // t_redir_check *redirs = NULL; // removed obsolete variable
 
     while (tokens)
     {
@@ -35,6 +35,7 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
             // Initialize redirection lists for this command
             new_cmd->infiles = NULL;
             new_cmd->outfiles = NULL;
+            new_cmd->redirs = NULL;  // This will maintain the order
 
             while (tokens && tokens->type != PIPE && tokens->type != END)
             {
@@ -57,10 +58,26 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
                     redir->filename = remove_quote_markers(tokens->str);
                     redir->type = REDIR_INPUT;
                     redir->next = NULL;
-                    // Append to infiles list
+                    
+                    // Add to ordered redirs list (PRIMARY LIST)
+                    t_redir **last_ordered = &new_cmd->redirs;
+                    while (*last_ordered) last_ordered = &(*last_ordered)->next;
+                    *last_ordered = redir;
+                    
+                    // Also add to infiles list for backward compatibility
+                    t_redir *infile_redir = malloc(sizeof(t_redir));
+                    if (!infile_redir) {
+                        perror("malloc");
+                        free_cmds(new_cmd);
+                        free_cmds(head);
+                        return NULL;
+                    }
+                    infile_redir->filename = ft_strdup(redir->filename);
+                    infile_redir->type = REDIR_INPUT;
+                    infile_redir->next = NULL;
                     t_redir **last = &new_cmd->infiles;
                     while (*last) last = &(*last)->next;
-                    *last = redir;
+                    *last = infile_redir;
                 }
                 else if ((tokens->type == TRUNC || tokens->type == APPEND) && tokens->next)
                 {
@@ -75,10 +92,26 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
                     redir->filename = remove_quote_markers(tokens->str);
                     redir->type = (tokens->prev->type == APPEND) ? REDIR_APPEND : REDIR_OUTPUT;
                     redir->next = NULL;
-                    // Append to outfiles list
+                    
+                    // Add to ordered redirs list (PRIMARY LIST)
+                    t_redir **last_ordered = &new_cmd->redirs;
+                    while (*last_ordered) last_ordered = &(*last_ordered)->next;
+                    *last_ordered = redir;
+                    
+                    // Also add to outfiles list for backward compatibility
+                    t_redir *outfile_redir = malloc(sizeof(t_redir));
+                    if (!outfile_redir) {
+                        perror("malloc");
+                        free_cmds(new_cmd);
+                        free_cmds(head);
+                        return NULL;
+                    }
+                    outfile_redir->filename = ft_strdup(redir->filename);
+                    outfile_redir->type = redir->type;
+                    outfile_redir->next = NULL;
                     t_redir **last = &new_cmd->outfiles;
                     while (*last) last = &(*last)->next;
-                    *last = redir;
+                    *last = outfile_redir;
                 }
                 else if (tokens->type == HEREDOC && tokens->next)
                 {
@@ -95,6 +128,21 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
                         free_cmds(head);
                         return NULL;
                     }
+                    
+                    // Add heredoc to ordered redirs list (PRIMARY LIST)
+                    t_redir *redir = malloc(sizeof(t_redir));
+                    if (!redir) {
+                        perror("malloc");
+                        free_cmds(new_cmd);
+                        free_cmds(head);
+                        return NULL;
+                    }
+                    redir->filename = NULL;  // Heredoc doesn't use filename
+                    redir->type = REDIR_HEREDOC;
+                    redir->next = NULL;
+                    t_redir **last_ordered = &new_cmd->redirs;
+                    while (*last_ordered) last_ordered = &(*last_ordered)->next;
+                    *last_ordered = redir;
                 }
                 else if (tokens->type == INPUT || tokens->type == TRUNC || 
                          tokens->type == APPEND || tokens->type == HEREDOC)
@@ -109,8 +157,8 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
                 tokens = tokens->next;
             }
 
-            // Allow empty commands with redirections
-            if (argc == 0 && !new_cmd->outfiles && !new_cmd->infiles && new_cmd->heredoc <= 0)
+            // Allow empty commands with redirections - check the ordered list
+            if (argc == 0 && !new_cmd->redirs)
             {
                 free(new_cmd->argv);
                 free_cmds(new_cmd);

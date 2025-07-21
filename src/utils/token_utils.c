@@ -1,17 +1,17 @@
 #include "../../include/minishell.h"
 
-static int is_operator(char c)
+int is_operator(char c)
 {
     return (c == '|' || c == '<' || c == '>');
 }
 
-static int is_quote(char c)
+int is_quote(char c)
 {
     return (c == '\'' || c == '"');
 }
 
 // Skip spaces and return new position
-static int skip_spaces(const char *s, int i)
+int skip_spaces(const char *s, int i)
 {
     while (s[i] && ft_isspace(s[i]))
         i++;
@@ -19,7 +19,7 @@ static int skip_spaces(const char *s, int i)
 }
 
 // Count tokens with proper quote and concatenation handling
-static int count_tokens(const char *s)
+ int count_tokens(const char *s)
 {
     int count = 0;
     int i = 0;
@@ -76,7 +76,7 @@ static int count_tokens(const char *s)
 
 // Extract a single token handling quotes and concatenation
 // Store quote information by adding markers at beginning/end
-static char *extract_token(const char *s, int *pos)
+char *extract_token(const char *s, int *pos)
 {
     int i = *pos;
     char *result = malloc(2048);  // Larger buffer for quote markers
@@ -159,7 +159,6 @@ static char *extract_token(const char *s, int *pos)
     free(result);
     return final;
 }
-
 char **ft_split_quotes(const char *input)
 {
     if (!input)

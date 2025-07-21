@@ -9,6 +9,73 @@ int has_pipe(t_cmd *cmds)
     return (cmds->next != NULL);
 }
 
+// Handle redirections in the order they appear in the command line
+int handle_redirections_in_order(t_cmd *cmd)
+{
+    // Only process if we have ordered redirections
+    if (!cmd->redirs) {
+        // Handle heredoc if present (for backward compatibility)
+        if (cmd->heredoc > 0) {
+            dup2(cmd->heredoc, STDIN_FILENO);
+            close(cmd->heredoc);
+        }
+        return 0;
+    }
+    
+    // NEW: Process redirections sequentially, stopping on first failure
+    t_redir *redir;
+    for (redir = cmd->redirs; redir; redir = redir->next) {
+        if (redir->type == REDIR_INPUT) {
+            // Check if input file exists before trying to open it
+            if (access(redir->filename, F_OK) == -1) {
+                fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                return -1; // Stop processing on failure
+            }
+            if (access(redir->filename, R_OK) == -1) {
+                fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                return -1;
+            }
+            
+            // Open and apply input redirection
+            int fd = open(redir->filename, O_RDONLY);
+            if (fd == -1) {
+                perror(redir->filename);
+                return -1;
+            }
+            
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+        }
+        else if (redir->type == REDIR_OUTPUT || redir->type == REDIR_APPEND) {
+            // Create/open output file (succeeds even if later redirections fail)
+            int flags = O_WRONLY | O_CREAT;
+            if (redir->type == REDIR_APPEND)
+                flags |= O_APPEND;
+            else
+                flags |= O_TRUNC;
+                
+            int fd = open(redir->filename, flags, 0644);
+            if (fd == -1) {
+                perror(redir->filename);
+                return -1;
+            }
+            
+            dup2(fd, STDOUT_FILENO);
+            close(fd);
+        }
+        else if (redir->type == REDIR_HEREDOC) {
+            // Handle heredoc
+            if (cmd->heredoc > 0) {
+                dup2(cmd->heredoc, STDIN_FILENO);
+                close(cmd->heredoc);
+            }
+        }
+    }
+    
+    return 0;
+}
+
+// Modified pipeline execution - replace the redirection handling section
 int execute_pipeline(t_cmd *cmds, t_shell *shell)
 {
     int **pipes;
@@ -79,7 +146,7 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
             signal(SIGINT, SIG_DFL);
             signal(SIGQUIT, SIG_DFL);
             
-            // Set up pipes
+            // Set up pipes FIRST
             if (i > 0) {
                 // Not first command - redirect stdin from previous pipe
                 dup2(pipes[i - 1][0], STDIN_FILENO);
@@ -96,57 +163,10 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
                 close(pipes[j][1]);
             }
             
-            // Handle redirections for this command
-            if (current->infiles || current->outfiles || current->heredoc > 0) {
-                // Handle input redirections
-                if (current->infiles) {
-                    int fd = -1;
-                    t_redir *redir;
-                    for (redir = current->infiles; redir; redir = redir->next) {
-                        if (redir->type == REDIR_INPUT) {
-                            int tmp_fd = open(redir->filename, O_RDONLY);
-                            if (tmp_fd == -1) {
-                                perror(redir->filename);
-                                exit(1);
-                            }
-                            if (fd != -1) close(fd);
-                            fd = tmp_fd;
-                        }
-                    }
-                    if (fd != -1) {
-                        dup2(fd, STDIN_FILENO);
-                        close(fd);
-                    }
-                }
-                
-                // Handle heredoc
-                if (current->heredoc > 0) {
-                    dup2(current->heredoc, STDIN_FILENO);
-                    close(current->heredoc);
-                }
-                
-                // Handle output redirections
-                if (current->outfiles) {
-                    int fd = -1;
-                    t_redir *redir;
-                    for (redir = current->outfiles; redir; redir = redir->next) {
-                        int flags = O_WRONLY | O_CREAT;
-                        if (redir->type == REDIR_APPEND)
-                            flags |= O_APPEND;
-                        else
-                            flags |= O_TRUNC;
-                        int tmp_fd = open(redir->filename, flags, 0644);
-                        if (tmp_fd == -1) {
-                            perror(redir->filename);
-                            exit(1);
-                        }
-                        if (fd != -1) close(fd);
-                        fd = tmp_fd;
-                    }
-                    if (fd != -1) {
-                        dup2(fd, STDOUT_FILENO);
-                        close(fd);
-                    }
+            // Handle redirections in correct order - this will override pipe setup if needed
+            if (current->redirs || current->infiles || current->outfiles || current->heredoc > 0) {
+                if (handle_redirections_in_order(current) == -1) {
+                    exit(1); // Exit with error if redirection fails
                 }
             }
             

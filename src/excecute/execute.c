@@ -1,4 +1,5 @@
 #include "../include/minishell.h"
+#include <errno.h>
 
 int is_builtin(char *cmd)
 {
@@ -323,85 +324,159 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     return 1;
 }
 
-// Execute commands in correct order: validate redirections, create files, then execute
-// This is called for BOTH single commands and commands in pipelines
-// Updated to handle multiple redirections using t_redir linked lists
+// Execute commands with redirections (used by pipelines)
+// Process redirections in exact order, stopping on first failure
 static int execute_with_redirections(t_cmd *cmd, t_shell *shell)
 {
     int stdin_backup = -1;
     int stdout_backup = -1;
     int status = 0;
-    int input_error = 0;
-    t_redir *redir;
+    int has_redirection_error = 0;
 
-    // FIRST: Process output redirections to create files (like bash does)
-    if (cmd->outfiles) {
-        int fd = -1;
-        for (redir = cmd->outfiles; redir; redir = redir->next) {
-            int flags = O_WRONLY | O_CREAT;
-            if (redir->type == REDIR_APPEND)
-                flags |= O_APPEND;
-            else
-                flags |= O_TRUNC;
-            int tmp_fd = open(redir->filename, flags, 0644);
-            if (tmp_fd == -1) {
-                perror(redir->filename);
-                if (fd != -1) close(fd);
-                status = 1;
-                goto cleanup;
+    // NEW: Process redirections in exact order (left to right)
+    // This matches bash behavior: earlier redirections succeed even if later ones fail
+    if (cmd->redirs) {
+        t_redir *redir;
+        for (redir = cmd->redirs; redir; redir = redir->next) {
+            if (redir->type == REDIR_INPUT) {
+                // Check if input file exists before trying to open it
+                if (access(redir->filename, F_OK) == -1) {
+                    fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                    has_redirection_error = 1;
+                    break; // Stop processing further redirections
+                }
+                if (access(redir->filename, R_OK) == -1) {
+                    fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                    has_redirection_error = 1;
+                    break;
+                }
+                
+                // Open input file
+                int fd = open(redir->filename, O_RDONLY);
+                if (fd == -1) {
+                    perror(redir->filename);
+                    has_redirection_error = 1;
+                    break;
+                }
+                
+                // Apply input redirection
+                if (stdin_backup == -1)
+                    stdin_backup = dup(STDIN_FILENO);
+                dup2(fd, STDIN_FILENO);
+                close(fd);
             }
-            if (fd != -1) close(fd);
-            fd = tmp_fd;
-        }
-        if (fd != -1) {
-            stdout_backup = dup(STDOUT_FILENO);
-            dup2(fd, STDOUT_FILENO);
-            close(fd);
+            else if (redir->type == REDIR_OUTPUT || redir->type == REDIR_APPEND) {
+                // Create/open output file (this succeeds even if later redirections fail)
+                int flags = O_WRONLY | O_CREAT;
+                if (redir->type == REDIR_APPEND)
+                    flags |= O_APPEND;
+                else
+                    flags |= O_TRUNC;
+                    
+                int fd = open(redir->filename, flags, 0644);
+                if (fd == -1) {
+                    perror(redir->filename);
+                    has_redirection_error = 1;
+                    break;
+                }
+                
+                // Apply output redirection
+                if (stdout_backup == -1)
+                    stdout_backup = dup(STDOUT_FILENO);
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+            }
         }
     }
-
-    // SECOND: Process input redirections (check for errors but don't fail yet)
-    if (cmd->infiles) {
-        int fd = -1;
-        for (redir = cmd->infiles; redir; redir = redir->next) {
-            if (redir->type == REDIR_INPUT) {
-                int tmp_fd = open(redir->filename, O_RDONLY);
+    
+    // Fallback to old logic if no ordered redirections
+    if (!cmd->redirs) {
+        // Process output redirections first (original logic)
+        if (cmd->outfiles) {
+            t_redir *redir;
+            int fd = -1;
+            for (redir = cmd->outfiles; redir; redir = redir->next) {
+                int flags = O_WRONLY | O_CREAT;
+                if (redir->type == REDIR_APPEND)
+                    flags |= O_APPEND;
+                else
+                    flags |= O_TRUNC;
+                int tmp_fd = open(redir->filename, flags, 0644);
                 if (tmp_fd == -1) {
                     perror(redir->filename);
                     if (fd != -1) close(fd);
-                    input_error = 1;
+                    has_redirection_error = 1;
                     status = 1;
-                    // Don't return yet - we've already created output files
                     break;
                 }
                 if (fd != -1) close(fd);
                 fd = tmp_fd;
             }
+            if (fd != -1 && !has_redirection_error) {
+                stdout_backup = dup(STDOUT_FILENO);
+                dup2(fd, STDOUT_FILENO);
+                close(fd);
+            }
+            else if (fd != -1) {
+                close(fd);
+            }
         }
-        if (fd != -1 && !input_error) {
-            stdin_backup = dup(STDIN_FILENO);
-            dup2(fd, STDIN_FILENO);
-            close(fd);
+
+        // Process input redirections
+        if (cmd->infiles && !has_redirection_error) {
+            t_redir *redir;
+            int fd = -1;
+            for (redir = cmd->infiles; redir; redir = redir->next) {
+                if (redir->type == REDIR_INPUT) {
+                    int tmp_fd = open(redir->filename, O_RDONLY);
+                    if (tmp_fd == -1) {
+                        if (errno == ENOENT)
+                            fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                        else if (errno == EACCES)
+                            fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                        else
+                            perror(redir->filename);
+                        if (fd != -1) close(fd);
+                        has_redirection_error = 1;
+                        status = 1;
+                        break;
+                    }
+                    if (fd != -1) close(fd);
+                    fd = tmp_fd;
+                }
+            }
+            if (fd != -1 && !has_redirection_error) {
+                stdin_backup = dup(STDIN_FILENO);
+                dup2(fd, STDIN_FILENO);
+                close(fd);
+            }
+            else if (fd != -1) {
+                close(fd);
+            }
         }
     }
     
-    // Handle heredoc as highest priority input (if no input error)
-    if (cmd->heredoc > 0 && !input_error) {
+    // Handle heredoc as highest priority input (only if no errors)
+    if (cmd->heredoc > 0 && !has_redirection_error) {
         if (stdin_backup == -1)
             stdin_backup = dup(STDIN_FILENO);
         dup2(cmd->heredoc, STDIN_FILENO);
         close(cmd->heredoc);
     }
+    else if (cmd->heredoc > 0) {
+        close(cmd->heredoc);
+    }
 
-    // Execute command only if there was no input error
-    if (!input_error && cmd->argv && cmd->argv[0] && cmd->argv[0][0] != '\0') {
+    // Execute command only if there were no redirection errors
+    if (!has_redirection_error && cmd->argv && cmd->argv[0] && cmd->argv[0][0] != '\0') {
         if (is_builtin(cmd->argv[0]))
             status = execute_builtin(cmd, shell);
         else
             status = execute_external(cmd, shell);
+    } else if (has_redirection_error) {
+        status = 1;
     }
 
-cleanup:
     // Reset file descriptors
     if (stdin_backup != -1) {
         dup2(stdin_backup, STDIN_FILENO);

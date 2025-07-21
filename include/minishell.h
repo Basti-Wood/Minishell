@@ -68,6 +68,7 @@ typedef struct s_cmd {
     char **argv;
     t_redir *infiles;   // Linked list of input redirections
     t_redir *outfiles;  // Linked list of output redirections (type: TRUNC or APPEND)
+	t_redir *redirs;
     int heredoc;
     struct s_cmd *next;
 } t_cmd;
@@ -135,6 +136,15 @@ int validate_output_file(const char *filename);
 void free_tokens(t_token *tokens);
 void free_cmds(t_cmd *cmds);
 void free_env_list(t_env_list *env_list);
+
+// Input validation function for fixing test 48
+int validate_input_files_before_output(t_cmd *cmd);
+
+// Fixed tokenizing function for fixing test 74
+char **ft_split_quotes(const char *input);
+
+// MISSING FUNCTION: Remove quote markers (was being called but not implemented)
+char *remove_quote_markers(const char *str);
 
 
 

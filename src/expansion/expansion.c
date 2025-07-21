@@ -1,5 +1,5 @@
 #include "../include/minishell.h"
-
+/*
 char *remove_quote_markers(const char *str)
 {
     char *result = malloc(ft_strlen(str) + 1);
@@ -14,7 +14,7 @@ char *remove_quote_markers(const char *str)
     result[j] = '\0';
     return result;
 }
-
+*/
 t_token *handle_empty_expansions(t_token *tokens)
 {
     t_token *head = tokens;
