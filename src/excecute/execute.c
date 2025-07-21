@@ -334,18 +334,6 @@ static int execute_with_redirections(t_cmd *cmd, t_shell *shell)
     int input_error = 0;
     t_redir *redir;
 
-    // Special case for cat: check input files first
-    if (cmd->argv && cmd->argv[0] && ft_strcmp(cmd->argv[0], "cat") == 0 && cmd->infiles) {
-        for (redir = cmd->infiles; redir; redir = redir->next) {
-            if (redir->type == REDIR_INPUT) {
-                if (access(redir->filename, F_OK) == -1) {
-                    perror(redir->filename);
-                    return 1;
-                }
-            }
-        }
-    }
-
     // FIRST: Process output redirections to create files (like bash does)
     if (cmd->outfiles) {
         int fd = -1;
@@ -425,6 +413,7 @@ cleanup:
     }
     return status;
 }
+
 
 int execute_command(t_cmd *cmd, t_shell *shell)
 {

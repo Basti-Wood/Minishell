@@ -1,9 +1,11 @@
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 
 int has_pipe(t_cmd *cmds)
 {
     if (!cmds)
         return 0;
+    
+    // Check if there's more than one command (connected by pipes)
     return (cmds->next != NULL);
 }
 
@@ -71,6 +73,11 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
         
         if (pids[i] == 0) {
             // Child process
+            
+            // Reset signal handlers
+            signal(SIGPIPE, SIG_DFL);
+            signal(SIGINT, SIG_DFL);
+            signal(SIGQUIT, SIG_DFL);
             
             // Set up pipes
             if (i > 0) {
