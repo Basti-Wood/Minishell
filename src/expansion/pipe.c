@@ -84,6 +84,7 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
     int status = 0;
     int i;
     t_cmd *current;
+    int broken_pipe_detected = 0;
     
     // Count commands
     current = cmds;
@@ -141,7 +142,7 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
         if (pids[i] == 0) {
             // Child process
             
-            // Reset signal handlers
+            // Reset signal handlers - let SIGPIPE kill the process naturally
             signal(SIGPIPE, SIG_DFL);
             signal(SIGINT, SIG_DFL);
             signal(SIGQUIT, SIG_DFL);
@@ -171,11 +172,11 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
             }
             
             // Execute the command
-            if (current->argv && current->argv[0]) {
+            if (current->argv && current->argv[0] && current->argv[0][0] != '\0') {
                 if (is_builtin(current->argv[0])) {
                     exit(execute_builtin(current, shell));
                 } else {
-                    // For external commands, we need to handle them properly
+                    // For external commands
                     char *executable = find_executable(current->argv[0], shell->envp);
                     if (!executable) {
                         fprintf(stderr, "minishell: %s: command not found\n", current->argv[0]);
@@ -205,19 +206,47 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
         close(pipes[i][1]);
     }
     
-    // Wait for all children
+    // Wait for all children and check for broken pipes
+    int *child_statuses = malloc(sizeof(int) * cmd_count);
+    int last_command_failed = 0;
+    
     for (i = 0; i < cmd_count; i++) {
         if (pids[i] > 0) {
-            int child_status;
-            waitpid(pids[i], &child_status, 0);
+            waitpid(pids[i], &child_statuses[i], 0);
+            
             // Keep the exit status of the last command
             if (i == cmd_count - 1) {
-                if (WIFEXITED(child_status))
-                    status = WEXITSTATUS(child_status);
-                else if (WIFSIGNALED(child_status))
-                    status = 128 + WTERMSIG(child_status);
+                if (WIFEXITED(child_statuses[i])) {
+                    status = WEXITSTATUS(child_statuses[i]);
+                    if (status != 0) {
+                        last_command_failed = 1;
+                    }
+                } else if (WIFSIGNALED(child_statuses[i])) {
+                    int sig = WTERMSIG(child_statuses[i]);
+                    if (sig == SIGPIPE)
+                        status = 0;  // Broken pipe is not an error for the last command
+                    else
+                        status = 128 + sig;
+                }
             }
         }
+    }
+    
+    // Now check for broken pipes, but only report if last command didn't fail
+    if (!last_command_failed) {
+        for (i = 0; i < cmd_count - 1; i++) {
+            if (WIFSIGNALED(child_statuses[i]) && WTERMSIG(child_statuses[i]) == SIGPIPE) {
+                broken_pipe_detected = 1;
+                break;
+            }
+        }
+    }
+    
+    free(child_statuses);
+    
+    // Print "Broken pipe" message if detected (like bash does)
+    if (broken_pipe_detected) {
+        fprintf(stderr, " Broken pipe\n");
     }
     
     // Clean up
