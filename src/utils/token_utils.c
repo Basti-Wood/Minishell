@@ -113,21 +113,29 @@ static char *extract_token(const char *s, int *pos)
             }
             quote = 0;
         }
-        else if (is_operator(s[i]) && !token_started)
+        else if (is_operator(s[i]))
         {
-            // Handle operator as separate token
-            if ((s[i] == '>' && s[i+1] == '>') || (s[i] == '<' && s[i+1] == '<'))
+            if (!token_started)
             {
-                result[res_len++] = s[i++];
-                result[res_len++] = s[i++];
+                // Handle operator as separate token
+                if ((s[i] == '>' && s[i+1] == '>') || (s[i] == '<' && s[i+1] == '<'))
+                {
+                    result[res_len++] = s[i++];
+                    result[res_len++] = s[i++];
+                }
+                else
+                {
+                    result[res_len++] = s[i++];
+                }
+                break;
             }
             else
             {
-                result[res_len++] = s[i++];
+                // End of current token when we hit an operator
+                break;
             }
-            break;
         }
-        else if (is_operator(s[i]) || ft_isspace(s[i]))
+        else if (ft_isspace(s[i]))
         {
             // End of token
             break;

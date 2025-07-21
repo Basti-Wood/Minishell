@@ -244,54 +244,10 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     pid = fork();
     if (pid == 0)
     {
-        // Child process - handle redirections here
-        // Input redirections (including heredoc)
-        int fd = -1;
-        t_redir *redir;
-        if (cmd->infiles) {
-            for (redir = cmd->infiles; redir; redir = redir->next) {
-                if (redir->type == REDIR_INPUT) {
-                    int tmp_fd = open(redir->filename, O_RDONLY);
-                    if (tmp_fd == -1) {
-                        perror(redir->filename);
-                        exit(1);
-                    }
-                    if (fd != -1) close(fd);
-                    fd = tmp_fd;
-                }
-            }
-            if (fd != -1) {
-                dup2(fd, STDIN_FILENO);
-                close(fd);
-            }
-        }
-        if (cmd->heredoc > 0) {
-            dup2(cmd->heredoc, STDIN_FILENO);
-            close(cmd->heredoc);
-        }
-
-        // Output redirections
-        fd = -1;
-        if (cmd->outfiles) {
-            for (redir = cmd->outfiles; redir; redir = redir->next) {
-                int flags = O_WRONLY | O_CREAT;
-                if (redir->type == REDIR_APPEND)
-                    flags |= O_APPEND;
-                else
-                    flags |= O_TRUNC;
-                int tmp_fd = open(redir->filename, flags, 0644);
-                if (tmp_fd == -1) {
-                    perror(redir->filename);
-                    exit(1);
-                }
-                if (fd != -1) close(fd);
-                fd = tmp_fd;
-            }
-            if (fd != -1) {
-                dup2(fd, STDOUT_FILENO);
-                close(fd);
-            }
-        }
+        // Child process
+        // Note: When called from execute_with_redirections, redirections
+        // are already set up. When called from execute_pipeline, we don't
+        // need to set them up here as they're handled in the pipeline function.
         
         if (execve(executable, cmd->argv, env_array) == -1)
         {
@@ -375,41 +331,24 @@ static int execute_with_redirections(t_cmd *cmd, t_shell *shell)
     int stdin_backup = -1;
     int stdout_backup = -1;
     int status = 0;
-    int fd = -1;
+    int input_error = 0;
     t_redir *redir;
 
-    // Handle all input redirections (including heredoc if present)
-    if (cmd->infiles) {
+    // Special case for cat: check input files first
+    if (cmd->argv && cmd->argv[0] && ft_strcmp(cmd->argv[0], "cat") == 0 && cmd->infiles) {
         for (redir = cmd->infiles; redir; redir = redir->next) {
             if (redir->type == REDIR_INPUT) {
-                int tmp_fd = open(redir->filename, O_RDONLY);
-                if (tmp_fd == -1) {
+                if (access(redir->filename, F_OK) == -1) {
                     perror(redir->filename);
-                    if (fd != -1) close(fd);
-                    status = 1;
-                    goto cleanup;
+                    return 1;
                 }
-                if (fd != -1) close(fd);
-                fd = tmp_fd;
             }
-            // If you want to support heredoc as a redir, handle here
         }
-        if (fd != -1) {
-            stdin_backup = dup(STDIN_FILENO);
-            dup2(fd, STDIN_FILENO);
-            close(fd);
-        }
-    }
-    // If heredoc is present (legacy int), handle it as highest priority
-    if (cmd->heredoc > 0) {
-        stdin_backup = dup(STDIN_FILENO);
-        dup2(cmd->heredoc, STDIN_FILENO);
-        close(cmd->heredoc);
     }
 
-    // Handle all output redirections
-    fd = -1;
+    // FIRST: Process output redirections to create files (like bash does)
     if (cmd->outfiles) {
+        int fd = -1;
         for (redir = cmd->outfiles; redir; redir = redir->next) {
             int flags = O_WRONLY | O_CREAT;
             if (redir->type == REDIR_APPEND)
@@ -433,8 +372,41 @@ static int execute_with_redirections(t_cmd *cmd, t_shell *shell)
         }
     }
 
-    // Execute command if redirections succeeded
-    if (cmd->argv && cmd->argv[0] && cmd->argv[0][0] != '\0' && status == 0) {
+    // SECOND: Process input redirections (check for errors but don't fail yet)
+    if (cmd->infiles) {
+        int fd = -1;
+        for (redir = cmd->infiles; redir; redir = redir->next) {
+            if (redir->type == REDIR_INPUT) {
+                int tmp_fd = open(redir->filename, O_RDONLY);
+                if (tmp_fd == -1) {
+                    perror(redir->filename);
+                    if (fd != -1) close(fd);
+                    input_error = 1;
+                    status = 1;
+                    // Don't return yet - we've already created output files
+                    break;
+                }
+                if (fd != -1) close(fd);
+                fd = tmp_fd;
+            }
+        }
+        if (fd != -1 && !input_error) {
+            stdin_backup = dup(STDIN_FILENO);
+            dup2(fd, STDIN_FILENO);
+            close(fd);
+        }
+    }
+    
+    // Handle heredoc as highest priority input (if no input error)
+    if (cmd->heredoc > 0 && !input_error) {
+        if (stdin_backup == -1)
+            stdin_backup = dup(STDIN_FILENO);
+        dup2(cmd->heredoc, STDIN_FILENO);
+        close(cmd->heredoc);
+    }
+
+    // Execute command only if there was no input error
+    if (!input_error && cmd->argv && cmd->argv[0] && cmd->argv[0][0] != '\0') {
         if (is_builtin(cmd->argv[0]))
             status = execute_builtin(cmd, shell);
         else
@@ -453,6 +425,7 @@ cleanup:
     }
     return status;
 }
+
 int execute_command(t_cmd *cmd, t_shell *shell)
 {
     if (!cmd)
