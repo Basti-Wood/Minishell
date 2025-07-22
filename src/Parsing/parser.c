@@ -13,7 +13,7 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
         {
             if (!current)
             {
-                fprintf(stderr, "minishell: syntax error near unexpected token `|'\n");
+                ft_fprintf_stderr("minishell: syntax error near unexpected token `|'\n");
                 shell->exit_status = 258;
                 free_cmds(head);
                 return NULL;
@@ -147,7 +147,7 @@ t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
                 else if (tokens->type == INPUT || tokens->type == TRUNC || 
                          tokens->type == APPEND || tokens->type == HEREDOC)
                 {
-                    fprintf(stderr, "minishell: syntax error near unexpected token `%s'\n", 
+                    ft_fprintf_stderr("minishell: syntax error near unexpected token `%s'\n", 
                             tokens->next ? tokens->next->str : "newline");
                     shell->exit_status = 258;
                     free_cmds(new_cmd);

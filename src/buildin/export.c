@@ -49,7 +49,7 @@ int builtin_export(char **args, t_env_list *env_list)
             
             if (!is_valid_identifier(key))
             {
-                fprintf(stderr, "minishell: export: `%s': not a valid identifier\n", key);
+                ft_fprintf_stderr("minishell: export: `%s': not a valid identifier\n", key);
                 exit_status = 1;
             }
             else
@@ -65,7 +65,7 @@ int builtin_export(char **args, t_env_list *env_list)
             
             if (!is_valid_identifier(key))
             {
-                fprintf(stderr, "minishell: export: `%s': not a valid identifier\n", key);
+                ft_fprintf_stderr("minishell: export: `%s': not a valid identifier\n", key);
                 exit_status = 1;
             }
             else if (!get_env_value(env_list, key))

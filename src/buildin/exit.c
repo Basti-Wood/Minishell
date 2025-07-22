@@ -41,13 +41,13 @@ int builtin_exit(char **args)
     {
         if (!is_numeric_str(args[1]))
         {
-            fprintf(stderr, "minishell: exit: %s: numeric argument required\n", args[1]);
+            ft_fprintf_stderr("minishell: exit: %s: numeric argument required\n", args[1]);
             exit(2);  // Bash returns 2 for non-numeric argument
         }
         
         if (args[2])
         {
-            fprintf(stderr, "minishell: exit: too many arguments\n");
+            ft_fprintf_stderr("minishell: exit: too many arguments\n");
             return 1;
         }
         

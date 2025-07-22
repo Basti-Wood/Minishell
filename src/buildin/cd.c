@@ -9,7 +9,7 @@ int builtin_cd(char **args, t_env_list *env_list)
 
 	if (args[1] && args[2])
     {
-        fprintf(stderr, "minishell: cd: too many arguments\n");
+        ft_fprintf_stderr("minishell: cd: too many arguments\n");
         return 1;
     }
 
@@ -25,7 +25,7 @@ int builtin_cd(char **args, t_env_list *env_list)
         home = get_env_value(env_list, "HOME");
         if (!home)
         {
-            fprintf(stderr, "cd: HOME not set\n");
+            ft_fprintf_stderr("cd: HOME not set\n");
             return 1;
         }
         path = home;

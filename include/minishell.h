@@ -18,6 +18,7 @@
 #include <readline/history.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <stdarg.h>
 #include "../libft/libft/libft.h"
 
 typedef enum e_token_type {
@@ -146,6 +147,8 @@ char **ft_split_quotes(const char *input);
 // MISSING FUNCTION: Remove quote markers (was being called but not implemented)
 char *remove_quote_markers(const char *str);
 
-
+// Custom fprintf implementation using only allowed functions
+int ft_fprintf(int fd, const char *format, ...);
+int ft_fprintf_stderr(const char *format, ...);
 
 #endif

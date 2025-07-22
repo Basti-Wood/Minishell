@@ -28,11 +28,11 @@ int handle_redirections_in_order(t_cmd *cmd)
         if (redir->type == REDIR_INPUT) {
             // Check if input file exists before trying to open it
             if (access(redir->filename, F_OK) == -1) {
-                fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                ft_fprintf_stderr("minishell: %s: No such file or directory\n", redir->filename);
                 return -1; // Stop processing on failure
             }
             if (access(redir->filename, R_OK) == -1) {
-                fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                ft_fprintf_stderr("minishell: %s: Permission denied\n", redir->filename);
                 return -1;
             }
             
@@ -179,7 +179,7 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
                     // For external commands
                     char *executable = find_executable(current->argv[0], shell->envp);
                     if (!executable) {
-                        fprintf(stderr, "minishell: %s: command not found\n", current->argv[0]);
+                        ft_fprintf_stderr("minishell: %s: command not found\n", current->argv[0]);
                         exit(127);
                     }
                     
@@ -246,7 +246,7 @@ int execute_pipeline(t_cmd *cmds, t_shell *shell)
     
     // Print "Broken pipe" message if detected (like bash does)
     if (broken_pipe_detected) {
-        fprintf(stderr, " Broken pipe\n");
+        ft_fprintf_stderr(" Broken pipe\n");
     }
     
     // Clean up

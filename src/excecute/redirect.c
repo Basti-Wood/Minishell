@@ -80,11 +80,11 @@ int validate_input_files_before_output(t_cmd *cmd)
         for (redir = cmd->redirs; redir; redir = redir->next) {
             if (redir->type == REDIR_INPUT) {
                 if (access(redir->filename, F_OK) == -1) {
-                    fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                    ft_fprintf_stderr("minishell: %s: No such file or directory\n", redir->filename);
                     return -1;
                 }
                 if (access(redir->filename, R_OK) == -1) {
-                    fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                    ft_fprintf_stderr("minishell: %s: Permission denied\n", redir->filename);
                     return -1;
                 }
             }
@@ -96,11 +96,11 @@ int validate_input_files_before_output(t_cmd *cmd)
         for (redir = cmd->infiles; redir; redir = redir->next) {
             if (redir->type == REDIR_INPUT) {
                 if (access(redir->filename, F_OK) == -1) {
-                    fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                    ft_fprintf_stderr("minishell: %s: No such file or directory\n", redir->filename);
                     return -1;
                 }
                 if (access(redir->filename, R_OK) == -1) {
-                    fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                    ft_fprintf_stderr("minishell: %s: Permission denied\n", redir->filename);
                     return -1;
                 }
             }
@@ -112,11 +112,11 @@ int validate_input_files_before_output(t_cmd *cmd)
 int validate_input_file(const char *filename)
 {
     if (access(filename, F_OK) == -1) {
-        fprintf(stderr, "minishell: %s: No such file or directory\n", filename);
+        ft_fprintf_stderr("minishell: %s: No such file or directory\n", filename);
         return 0;
     }
     if (access(filename, R_OK) == -1) {
-        fprintf(stderr, "minishell: %s: Permission denied\n", filename);
+        ft_fprintf_stderr("minishell: %s: Permission denied\n", filename);
         return 0;
     }
     return 1;
@@ -130,7 +130,7 @@ int validate_output_file(const char *filename)
     if (last_slash) {
         *last_slash = '\0';
         if (access(dir, W_OK) == -1) {
-            fprintf(stderr, "minishell: %s: Permission denied\n", dir);
+            ft_fprintf_stderr("minishell: %s: Permission denied\n", dir);
             free(dir);
             return 0;
         }

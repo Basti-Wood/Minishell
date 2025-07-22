@@ -213,17 +213,17 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     {
         if (stat(cmd->argv[0], &st) == 0 && S_ISDIR(st.st_mode))
         {
-            fprintf(stderr, "minishell: %s: Is a directory\n", cmd->argv[0]);
+            ft_fprintf_stderr("minishell: %s: Is a directory\n", cmd->argv[0]);
             return 126;
         }
         else if (access(cmd->argv[0], F_OK) != 0)
         {
-            fprintf(stderr, "minishell: %s: No such file or directory\n", cmd->argv[0]);
+            ft_fprintf_stderr("minishell: %s: No such file or directory\n", cmd->argv[0]);
             return 127;
         }
         else if (access(cmd->argv[0], X_OK) != 0)
         {
-            fprintf(stderr, "minishell: %s: Permission denied\n", cmd->argv[0]);
+            ft_fprintf_stderr("minishell: %s: Permission denied\n", cmd->argv[0]);
             return 126;
         }
     }
@@ -231,7 +231,7 @@ int execute_external(t_cmd *cmd, t_shell *shell)
     executable = find_executable(cmd->argv[0], shell->envp);
     if (!executable)
     {
-        fprintf(stderr, "minishell: %s: command not found\n", cmd->argv[0]);
+        ft_fprintf_stderr("minishell: %s: command not found\n", cmd->argv[0]);
         return 127;
     }
     
@@ -284,7 +284,7 @@ int execute_external(t_cmd *cmd, t_shell *shell)
                 }
                 
                 // If still fails, exit with 126
-                fprintf(stderr, "minishell: %s: Exec format error\n", executable);
+                ft_fprintf_stderr("minishell: %s: Exec format error\n", executable);
                 exit(126);
             }
             perror("execve");
@@ -341,12 +341,12 @@ static int execute_with_redirections(t_cmd *cmd, t_shell *shell)
             if (redir->type == REDIR_INPUT) {
                 // Check if input file exists before trying to open it
                 if (access(redir->filename, F_OK) == -1) {
-                    fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                    ft_fprintf_stderr("minishell: %s: No such file or directory\n", redir->filename);
                     has_redirection_error = 1;
                     break; // Stop processing further redirections
                 }
                 if (access(redir->filename, R_OK) == -1) {
-                    fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                    ft_fprintf_stderr("minishell: %s: Permission denied\n", redir->filename);
                     has_redirection_error = 1;
                     break;
                 }
@@ -431,9 +431,9 @@ static int execute_with_redirections(t_cmd *cmd, t_shell *shell)
                     int tmp_fd = open(redir->filename, O_RDONLY);
                     if (tmp_fd == -1) {
                         if (errno == ENOENT)
-                            fprintf(stderr, "minishell: %s: No such file or directory\n", redir->filename);
+                            ft_fprintf_stderr("minishell: %s: No such file or directory\n", redir->filename);
                         else if (errno == EACCES)
-                            fprintf(stderr, "minishell: %s: Permission denied\n", redir->filename);
+                            ft_fprintf_stderr("minishell: %s: Permission denied\n", redir->filename);
                         else
                             perror(redir->filename);
                         if (fd != -1) close(fd);
