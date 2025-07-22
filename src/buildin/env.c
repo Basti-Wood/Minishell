@@ -40,13 +40,13 @@ void	set_env_value(t_env_list *env_list, const char *key, const char *value)
 
 int	builtin_env(t_env_list *env_list)
 {
-	t_env_node *current = env_list->head;
+	t_env_node	*current;
 
+	current = env_list->head;
 	while (current)
 	{
 		printf("%s=%s\n", current->key, current->value);
 		current = current->next;
 	}
-
 	return (0);
 }

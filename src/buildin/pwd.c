@@ -2,7 +2,9 @@
 
 int	builtin_pwd(void)
 {
-	char *cwd = getcwd(NULL, 0);
+	char	*cwd;
+
+	cwd = getcwd(NULL, 0);
 	if (!cwd)
 	{
 		perror("pwd");

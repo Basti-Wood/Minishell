@@ -1,24 +1,18 @@
 #include "../include/minishell.h"
 
-int	builtin_cd(char **args, t_env_list *env_list)
+static int	validate_cd_args(char **args)
 {
-	char *path;
-	char *home;
-	char *old_pwd;
-	char current_pwd[1024];
-
 	if (args[1] && args[2])
 	{
 		ft_fprintf_stderr("minishell: cd: too many arguments\n");
 		return (1);
 	}
+	return (0);
+}
 
-	if (getcwd(current_pwd, sizeof(current_pwd)) == NULL)
-	{
-		perror("cd: getcwd error");
-		return (1);
-	}
-	old_pwd = get_env_value(env_list, "PWD");
+static char	*get_cd_path(char **args, t_env_list *env_list)
+{
+	char	*home;
 
 	if (!args[1])
 	{
@@ -26,30 +20,51 @@ int	builtin_cd(char **args, t_env_list *env_list)
 		if (!home)
 		{
 			ft_fprintf_stderr("cd: HOME not set\n");
-			return (1);
+			return (NULL);
 		}
-		path = home;
+		return (home);
 	}
-	else
-	{
-		path = args[1];
-	}
+	return (args[1]);
+}
 
+static int	update_pwd_vars(t_env_list *env_list, char *old_pwd)
+{
+	char	*new_pwd;
+
+	new_pwd = getcwd(NULL, 0);
+	if (new_pwd)
+	{
+		if (old_pwd)
+			set_env_value(env_list, "OLDPWD", old_pwd);
+		set_env_value(env_list, "PWD", new_pwd);
+		free(new_pwd);
+		return (0);
+	}
+	return (1);
+}
+
+int	builtin_cd(char **args, t_env_list *env_list)
+{
+	char	*path;
+	char	*old_pwd;
+	char	current_pwd[1024];
+
+	if (validate_cd_args(args))
+		return (1);
+	if (getcwd(current_pwd, sizeof(current_pwd)) == NULL)
+	{
+		perror("cd: getcwd error");
+		return (1);
+	}
+	old_pwd = get_env_value(env_list, "PWD");
+	path = get_cd_path(args, env_list);
+	if (!path)
+		return (1);
 	if (chdir(path) != 0)
 	{
 		perror("cd");
 		return (1);
 	}
-
-	if (old_pwd)
-		set_env_value(env_list, "OLDPWD", old_pwd);
-
-	char *new_pwd = getcwd(NULL, 0);
-	if (new_pwd)
-	{
-		set_env_value(env_list, "PWD", new_pwd);
-		free(new_pwd);
-	}
-
+	update_pwd_vars(env_list, old_pwd);
 	return (0);
 }
