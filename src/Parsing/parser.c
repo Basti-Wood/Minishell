@@ -1,5 +1,7 @@
 #include "../../include/minishell.h"
 
+// Updated parser.c - focusing on the redirection handling part
+
 t_cmd *parse_tokens(t_token *tokens, t_shell *shell)
 {
     t_cmd *head = NULL;
