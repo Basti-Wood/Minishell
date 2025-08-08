@@ -1,0 +1,173 @@
+#include "../../include/minishell.h"
+
+// Helper function to check if character is a redirection operator
+static int is_redirect_char(char c)
+{
+    return (c == '<' || c == '>');
+}
+
+// Helper function to check if character is a special character that needs separation
+static int is_special_char(char c)
+{
+    return (c == '|' || c == '<' || c == '>' || ft_isspace(c));
+}
+
+// Count the number of tokens needed
+static int count_tokens(const char *input)
+{
+    int count = 0;
+    int i = 0;
+    int in_quotes = 0;
+    char quote_char = 0;
+    
+    while (input[i])
+    {
+        // Skip whitespace
+        while (input[i] && ft_isspace(input[i]) && !in_quotes)
+            i++;
+            
+        if (!input[i])
+            break;
+            
+        count++;
+        
+        // Process current token
+        while (input[i] && (!ft_isspace(input[i]) || in_quotes))
+        {
+            if (!in_quotes && (input[i] == '\'' || input[i] == '"'))
+            {
+                in_quotes = 1;
+                quote_char = input[i];
+                i++;
+            }
+            else if (in_quotes && input[i] == quote_char)
+            {
+                in_quotes = 0;
+                quote_char = 0;
+                i++;
+            }
+            else if (!in_quotes && is_special_char(input[i]))
+            {
+                // Handle redirection operators
+                if (is_redirect_char(input[i]))
+                {
+                    // Check for >> or <<
+                    if (input[i + 1] && input[i + 1] == input[i])
+                        i += 2;
+                    else
+                        i++;
+                }
+                else if (input[i] == '|')
+                {
+                    i++;
+                }
+                else
+                {
+                    break; // whitespace - end of token
+                }
+                
+                // This redirection is a separate token
+                if (i > 0 && !ft_isspace(input[i - 1]) && count > 0)
+                    count++;
+                break;
+            }
+            else
+            {
+                i++;
+            }
+        }
+    }
+    
+    return count;
+}
+
+// Extract next token from input starting at index i
+static char *extract_token(const char *input, int *i)
+{
+    int start = *i;
+    int in_quotes = 0;
+    char quote_char = 0;
+    
+    // Skip leading whitespace
+    while (input[*i] && ft_isspace(input[*i]))
+        (*i)++;
+    
+    if (!input[*i])
+        return NULL;
+        
+    start = *i;
+    
+    // Handle redirection operators first
+    if (is_redirect_char(input[*i]))
+    {
+        if (input[*i + 1] && input[*i + 1] == input[*i])
+            *i += 2; // >> or <<
+        else
+            (*i)++; // > or <
+        return ft_strndup(input + start, *i - start);
+    }
+    
+    // Handle pipe
+    if (input[*i] == '|')
+    {
+        (*i)++;
+        return ft_strndup(input + start, 1);
+    }
+    
+    // Handle regular tokens (including quoted strings)
+    while (input[*i])
+    {
+        if (!in_quotes && (input[*i] == '\'' || input[*i] == '"'))
+        {
+            in_quotes = 1;
+            quote_char = input[*i];
+            (*i)++;
+        }
+        else if (in_quotes && input[*i] == quote_char)
+        {
+            in_quotes = 0;
+            quote_char = 0;
+            (*i)++;
+        }
+        else if (!in_quotes && is_special_char(input[*i]))
+        {
+            break; // End of current token
+        }
+        else
+        {
+            (*i)++;
+        }
+    }
+    
+    if (*i > start)
+        return ft_strndup(input + start, *i - start);
+    
+    return NULL;
+}
+
+char **ft_split_quotes(const char *input)
+{
+    if (!input)
+        return NULL;
+        
+    int token_count = count_tokens(input);
+    char **result = malloc(sizeof(char *) * (token_count + 1));
+    
+    if (!result)
+        return NULL;
+        
+    int i = 0;
+    int token_index = 0;
+    
+    while (input[i] && token_index < token_count)
+    {
+        char *token = extract_token(input, &i);
+        if (token)
+        {
+            result[token_index++] = token;
+        }
+    }
+    
+    result[token_index] = NULL;
+    return result;
+}
