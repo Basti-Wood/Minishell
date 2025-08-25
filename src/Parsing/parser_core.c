@@ -32,7 +32,7 @@ void	add_cmd_to_list(t_cmd **head, t_cmd **current, t_cmd *new_cmd)
 	*current = new_cmd;
 }
 
-static t_cmd	*handle_pipe_token(t_token **tokens, t_cmd *current, 
+static	t_cmd	*handle_pipe_token(t_token **tokens, t_cmd *current,
 					t_shell *shell, t_cmd *head)
 {
 	if (!check_pipe_syntax(*tokens, current, shell))
@@ -41,7 +41,7 @@ static t_cmd	*handle_pipe_token(t_token **tokens, t_cmd *current,
 	return (head);
 }
 
-static t_cmd	*handle_command_token(t_token **tokens, t_cmd **current, 
+static	t_cmd	*handle_command_token(t_token **tokens, t_cmd **current,
 					t_shell *shell, t_cmd *head)
 {
 	t_cmd	*new_cmd;
@@ -65,7 +65,7 @@ t_cmd	*parse_tokens(t_token *tokens, t_shell *shell)
 	{
 		if (tokens->type == PIPE)
 			head = handle_pipe_token(&tokens, current, shell, head);
-		else if (tokens->type == CMD || tokens->type == ARG 
+		else if (tokens->type == CMD || tokens->type == ARG
 			|| is_redirection_token(tokens->type))
 			head = handle_command_token(&tokens, &current, shell, head);
 		else

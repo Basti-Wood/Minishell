@@ -12,6 +12,8 @@
 
 #include "../include/minishell.h"
 
+#include "../include/minishell.h"
+
 char	**env_list_to_array(t_env_list *env_list)
 {
 	char		**env_array;
@@ -27,19 +29,14 @@ char	**env_list_to_array(t_env_list *env_list)
 	i = 0;
 	while (current && i < env_list->size)
 	{
-		if (!current->key || !current->value)
+		if (current->key && current->value)
 		{
-			current = current->next;
-			continue ;
-		}
-		env_array[i] = create_env_string(current->key, current->value);
-		if (!env_array[i])
-		{
-			free_env_array_partial(env_array, i);
-			return (NULL);
+			env_array[i] = create_env_string(current->key, current->value);
+			if (!env_array[i])
+				return (free_env_array_partial(env_array, i), NULL);
+			i++;
 		}
 		current = current->next;
-		i++;
 	}
 	env_array[i] = NULL;
 	return (env_array);

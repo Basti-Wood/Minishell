@@ -13,21 +13,15 @@
 #include "../include/minishell.h"
 #include <errno.h>
 
-
-
-int execute_command(t_cmd *cmd, t_shell *shell)
+int	execute_command(t_cmd *cmd, t_shell *shell)
 {
-    if (!cmd)
-        return 0;
-    
-    // Handle empty command (from empty variable expansion)
-    if (cmd->argv && cmd->argv[0] && cmd->argv[0][0] == '\0')
-    {
-        shift_argv(&cmd->argv);
-        if (!cmd->argv[0])
-            return 0;
-    }
-    
-    // Use the common execution function
-    return execute_with_redirections(cmd, shell);
+	if (!cmd)
+		return (0);
+	if (cmd->argv && cmd->argv[0] && cmd->argv[0][0] == '\0')
+	{
+		shift_argv(&cmd->argv);
+		if (!cmd->argv || !cmd->argv[0])
+			return (0);
+	}
+	return (execute_with_redirections(cmd, shell));
 }

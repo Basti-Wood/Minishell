@@ -14,9 +14,9 @@
 
 int	handle_output_redir(t_token **tokens, t_cmd *cmd)
 {
-	t_redir		*redir;
-	t_redir		*outfile_redir;
 	t_redir_type	type;
+	t_redir			*redir;
+	t_redir			*outfile_redir;
 
 	type = ((*tokens)->type == APPEND) ? REDIR_APPEND : REDIR_OUTPUT;
 	*tokens = (*tokens)->next;

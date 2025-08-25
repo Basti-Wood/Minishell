@@ -41,8 +41,9 @@ int	handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell)
 		return (handle_heredoc_redir(tokens, cmd, shell));
 	else
 	{
-		ft_fprintf_stderr("minishell: syntax error near unexpected token `%s'\n",
-			(*tokens)->next ? (*tokens)->next->str : "newline");
+		ft_fprintf_stderr("minishell:
+				syntax error near unexpected token `%s'\n",
+				(*tokens)->next ? (*tokens)->next->str : "newline");
 		shell->exit_status = 258;
 		return (0);
 	}

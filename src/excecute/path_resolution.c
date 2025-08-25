@@ -12,7 +12,7 @@
 
 #include "../include/minishell.h"
 
-static void	free_paths_array(char **paths)
+void	free_paths_array(char **paths)
 {
 	int	i;
 
@@ -22,63 +22,34 @@ static void	free_paths_array(char **paths)
 	free(paths);
 }
 
+static char	*handle_absolute_path(char *cmd)
+{
+	struct stat	st;
+
+	if (access(cmd, F_OK) == 0)
+	{
+		if (stat(cmd, &st) == 0 && S_ISDIR(st.st_mode))
+			return (NULL);
+		return (ft_strdup(cmd));
+	}
+	return (NULL);
+}
+
 char	*find_executable(char *cmd, t_env_list *env_list)
 {
-	char		*path_env;
-	char		**paths;
-	char		*full_path;
-	int			i;
-	struct stat	st;
+	char	*path_env;
 
 	if (!cmd || !env_list)
 		return (NULL);
 	if (ft_strchr(cmd, '/'))
-	{
-		if (access(cmd, F_OK) == 0)
-		{
-			if (stat(cmd, &st) == 0 && S_ISDIR(st.st_mode))
-				return (NULL);
-			return (ft_strdup(cmd));
-		}
-		return (NULL);
-	}
+		return (handle_absolute_path(cmd));
 	path_env = get_env_value(env_list, "PATH");
 	if (!path_env)
 		return (NULL);
 	return (search_in_paths(cmd, path_env));
 }
 
-static char	*search_in_paths(char *cmd, char *path_env)
-{
-	char	**paths;
-	char	*full_path;
-	int		i;
-
-	paths = ft_split(path_env, ':');
-	if (!paths)
-		return (NULL);
-	i = 0;
-	while (paths[i])
-	{
-		full_path = build_full_path(paths[i], cmd);
-		if (!full_path)
-		{
-			free_paths_array(paths);
-			return (NULL);
-		}
-		if (access(full_path, X_OK) == 0)
-		{
-			free_paths_array(paths);
-			return (full_path);
-		}
-		free(full_path);
-		i++;
-	}
-	free_paths_array(paths);
-	return (NULL);
-}
-
-static char	*build_full_path(char *dir, char *cmd)
+char	*build_full_path(char *dir, char *cmd)
 {
 	char	*full_path;
 	size_t	path_len;

@@ -16,21 +16,19 @@
 int	execute_external(t_cmd *cmd, t_shell *shell)
 {
 	char		*executable;
-	char		**env_array;
-	pid_t		pid;
-	int			status;
-	struct stat	st;
+	int			path_check;
 
 	if (!validate_external_cmd(cmd, shell))
 		return (1);
 	if (cmd->argv[0][0] == '\0')
 	{
 		shift_argv(&cmd->argv);
-		if (!cmd->argv[0])
+		if (!cmd->argv || !cmd->argv[0])
 			return (0);
 	}
-	if (check_path_command(cmd->argv[0]) != 0)
-		return (check_path_command(cmd->argv[0]));
+	path_check = check_path_command(cmd->argv[0]);
+	if (path_check != 0)
+		return (path_check);
 	executable = find_executable(cmd->argv[0], shell->envp);
 	if (!executable)
 	{
@@ -58,7 +56,8 @@ static int	check_path_command(char *cmd)
 		}
 		else if (access(cmd, F_OK) != 0)
 		{
-			ft_fprintf_stderr("minishell: %s: No such file or directory\n", cmd);
+			ft_fprintf_stderr
+					("minishell: %s: No such file or directory\n", cmd);
 			return (127);
 		}
 		else if (access(cmd, X_OK) != 0)
