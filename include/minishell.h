@@ -6,7 +6,7 @@
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:02:28 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/25 12:28:50 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/25 20:14:47 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,9 +108,9 @@ typedef struct s_cmd
 
 typedef struct s_shell
 {
+	t_env_list		env_list;       // ← Add this member
+	int				exit_status;
 	char		*input;
-	int			exit_status;
-	t_env_list	*envp;
 }	t_shell;
 
 typedef struct s_fork_data
@@ -149,7 +149,7 @@ char			*get_input_line(void);
 int				handle_interrupt_signal(char *line);
 
 /* TOKENIZATION */
-t_token			*tokenize(t_shell *shell);
+t_token			*tokenize(const char *input, t_shell *shell);
 t_token			*token_split(char *input);
 t_token			*create_token(char **elements, t_shell *shell);
 t_token			*process_tokens(t_shell *shell);
@@ -178,6 +178,13 @@ t_redir			*create_redir(char *filename, t_redir_type type);
 int				execute_command(t_cmd *cmd, t_shell *shell);
 int				execute_builtin(t_cmd *cmd, t_shell *shell);
 int				execute_external(t_cmd *cmd, t_shell *shell);
+pid_t			fork_and_execute(t_cmd *cmd, t_shell *shell);
+
+/* EXECUTION UTILITIES - ADD THESE */
+void			shift_argv(char ***argv);
+int				execute_with_redirections(t_cmd *cmd, t_shell *shell);
+
+/* PIPELINE EXECUTION */
 int				execute_pipeline(t_cmd *cmds, t_shell *shell);
 int				execute_cmds(t_cmd *cmds, t_shell *shell);
 int				is_builtin(char *cmd);
@@ -195,7 +202,7 @@ int				builtin_pwd(void);
 int				builtin_export(char **args, t_env_list *env_list);
 int				builtin_unset(char **args, t_env_list *env_list);
 int				builtin_env(t_env_list *env_list);
-int				builtin_exit(char **args);
+int				builtin_exit(char **args, t_shell *shell);
 
 /* ENVIRONMENT MANAGEMENT */
 t_env_list		init_env_list(char **env);
@@ -214,7 +221,7 @@ int				should_expand_in_context(char c, int in_single_quotes);
 
 /* REDIRECTION */
 int				handle_redirections_in_order(t_cmd *cmd);
-int				handle_input_redir(t_redir *redir);
+int				handle_input_redir(t_token **tokens, t_cmd *cmd);  // ✅ Fixed signature
 
 /* HEREDOC */
 int				handle_heredoc(char *delimiter, t_shell *shell);
@@ -250,12 +257,22 @@ void			ft_putchar_fd_len(char c, int fd, int *len);
 void			ft_putnbr_fd_len(int n, int fd, int *len);
 void			handle_format_specifier(va_list args, char specifier,
 					int fd, int *len);
+int				ft_printf(const char *format, ...);
 
-/* REDIRECTION HANDLING */
+/* REDIRECTION HANDLING - Keep only these versions */
 int				handle_redirections_in_order(t_cmd *cmd);
-int				handle_input_redir(t_redir *redir);
-int				handle_output_redir(t_redir *redir);
-int				process_single_redir(t_redir *redir, t_cmd *cmd);
+int				handle_input_redir(t_token **tokens, t_cmd *cmd);
+int				handle_output_redir(t_token **tokens, t_cmd *cmd);
+int				handle_heredoc_redir(t_token **tokens, t_cmd *cmd, t_shell *shell);
+
+/* PARSING UTILITIES */
+void			add_to_ordered_redirs(t_cmd *cmd, t_redir *redir);
+void			add_to_infiles(t_cmd *cmd, t_redir *redir);
+void			add_to_outfiles(t_cmd *cmd, t_redir *redir);
+int				add_argument(t_cmd *cmd, char *arg, int *argc);
+int				is_redirection_token(t_token_type type);
+int				handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell);
+t_cmd			*init_new_cmd(void);
 
 /* PIPELINE UTILITIES */
 int				setup_child_pipes(int **pipes, int cmd_count, int cmd_index);
@@ -266,7 +283,9 @@ void			wait_for_children(pid_t *pids, int cmd_count, t_shell *shell);
 void			handle_broken_pipe(int status, int is_last_cmd);
 
 /* If these are used across files */
-int				is_valid_identifier(const char *str);
 void			print_sorted_env(t_env_list *env_list);
+
+/* EXECUTION - EXTERNAL COMMANDS */
+int				execute_external_command(t_cmd *cmd, t_shell *shell);
 
 #endif

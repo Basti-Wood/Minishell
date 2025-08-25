@@ -3,94 +3,118 @@
 /*                                                        :::      ::::::::   */
 /*   external_exec.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/08 14:36:10 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/08 14:36:38 by seftekha         ###   ########.fr       */
+/*   Created: 2025/07/28 16:04:15 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:20:36 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-#include <errno.h>
 
-int	execute_external(t_cmd *cmd, t_shell *shell)
+/* Forward declarations for static functions */
+static void	try_shell_script(char *executable, t_cmd *cmd, char **env_array);
+static void	cleanup_process_resources(char *executable, char **env_array);
+static int	get_argc(char **argv);
+static char	**create_sh_argv(char *executable, char **argv, int argc);
+
+void	execute_process(char *executable, t_cmd *cmd, char **env_array)
 {
-	char		*executable;
-	int			path_check;
-
-	if (!validate_external_cmd(cmd, shell))
-		return (1);
-	if (cmd->argv[0][0] == '\0')
-	{
-		shift_argv(&cmd->argv);
-		if (!cmd->argv || !cmd->argv[0])
-			return (0);
-	}
-	path_check = check_path_command(cmd->argv[0]);
-	if (path_check != 0)
-		return (path_check);
-	executable = find_executable(cmd->argv[0], shell->envp);
-	if (!executable)
-	{
-		ft_fprintf_stderr("minishell: %s: command not found\n", cmd->argv[0]);
-		return (127);
-	}
-	return (fork_and_exec(executable, cmd, shell));
+    if (execve(executable, cmd->argv, env_array) == -1)
+    {
+        if (errno == ENOEXEC)
+        {
+            try_shell_script(executable, cmd, env_array);
+        }
+        else
+        {
+            perror("execve");
+            cleanup_process_resources(executable, env_array);
+            exit(127);
+        }
+    }
 }
 
-static int	validate_external_cmd(t_cmd *cmd, t_shell *shell)
+void	handle_exec_failure(char *executable, char **env_array)
 {
-	return (cmd && cmd->argv && cmd->argv[0] && shell);
+    perror("execve");
+    cleanup_process_resources(executable, env_array);
+    exit(127);
 }
 
-static int	check_path_command(char *cmd)
+static void	try_shell_script(char *executable, t_cmd *cmd, char **env_array)
 {
-	struct stat	st;
+    char	**new_argv;
+    int		argc;
 
-	if (ft_strchr(cmd, '/'))
-	{
-		if (stat(cmd, &st) == 0 && S_ISDIR(st.st_mode))
-		{
-			ft_fprintf_stderr("minishell: %s: Is a directory\n", cmd);
-			return (126);
-		}
-		else if (access(cmd, F_OK) != 0)
-		{
-			ft_fprintf_stderr
-					("minishell: %s: No such file or directory\n", cmd);
-			return (127);
-		}
-		else if (access(cmd, X_OK) != 0)
-		{
-			ft_fprintf_stderr("minishell: %s: Permission denied\n", cmd);
-			return (126);
-		}
-	}
-	return (0);
+    argc = get_argc(cmd->argv);
+    new_argv = create_sh_argv(executable, cmd->argv, argc);
+    if (!new_argv)
+    {
+        cleanup_process_resources(executable, env_array);
+        exit(127);
+    }
+    
+    if (execve("/bin/sh", new_argv, env_array) == -1)
+    {
+        perror("execve /bin/sh");
+        free_string_array(new_argv);
+        cleanup_process_resources(executable, env_array);
+        exit(127);
+    }
 }
 
-static int	fork_and_exec(char *executable, t_cmd *cmd, t_shell *shell)
+static void	cleanup_process_resources(char *executable, char **env_array)
 {
-	char	**env_array;
-	pid_t	pid;
-	int		status;
+    if (executable && ft_strchr(executable, '/'))
+        free(executable);
+    
+    if (env_array)
+        free_string_array(env_array);
+}
 
-	env_array = env_list_to_array(shell->envp);
-	if (!env_array)
-	{
-		free(executable);
-		return (1);
-	}
-	pid = fork();
-	if (pid == 0)
-		child_process(executable, cmd, env_array);
-	else if (pid > 0)
-		status = parent_process(pid, executable, env_array);
-	else
-	{
-		perror("fork");
-		cleanup_exec_resources(executable, env_array);
-		return (1);
-	}
-	return (status);
+static int	get_argc(char **argv)
+{
+    int	count;
+
+    count = 0;
+    if (!argv)
+        return (0);
+    
+    while (argv[count])
+        count++;
+    
+    return (count);
+}
+
+static char	**create_sh_argv(char *executable, char **argv, int argc)
+{
+    char	**new_argv;
+    int		i;
+
+    new_argv = malloc(sizeof(char *) * (argc + 3));
+    if (!new_argv)
+        return (NULL);
+    
+    new_argv[0] = ft_strdup("sh");
+    new_argv[1] = ft_strdup(executable);
+    if (!new_argv[0] || !new_argv[1])
+    {
+        free_string_array(new_argv);
+        return (NULL);
+    }
+    
+    i = 1;
+    while (i < argc)
+    {
+        new_argv[i + 1] = ft_strdup(argv[i]);
+        if (!new_argv[i + 1])
+        {
+            free_string_array(new_argv);
+            return (NULL);
+        }
+        i++;
+    }
+    new_argv[argc + 1] = NULL;
+    return (new_argv);
 }

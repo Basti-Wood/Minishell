@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_core.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/18 13:33:27 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/18 13:33:38 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/25 19:47:04 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,7 @@
 
 int	check_pipe_syntax(t_token *tokens, t_cmd *current, t_shell *shell)
 {
+	(void)tokens;  // Mark as unused if not needed
 	if (!current)
 	{
 		ft_fprintf_stderr("minishell: syntax error near unexpected token`|'\n");
@@ -46,7 +47,7 @@ static	t_cmd	*handle_command_token(t_token **tokens, t_cmd **current,
 {
 	t_cmd	*new_cmd;
 
-	new_cmd = process_command_tokens(tokens, shell);
+	new_cmd = process_commands(*tokens, shell);  // ✅ Fixed: added asterisk
 	if (!new_cmd && shell->exit_status == 130)
 		return (free_cmds(head), NULL);
 	if (new_cmd)

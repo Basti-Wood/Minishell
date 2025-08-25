@@ -5,59 +5,57 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/28 16:03:16 by seftekha          #+#    #+#             */
-/*   Updated: 2025/07/28 16:03:17 by seftekha         ###   ########.fr       */
+/*   Created: 2025/07/28 16:02:55 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 19:50:56 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-#include "../include/minishell.h"
 
-char	*get_env_value(t_env_list *env_list, const char *key)
+#include "../../include/minishell.h"
+
+static int	is_valid_number(const char *str)
 {
-	t_env_node	*current;
+    int	i;
 
-	*current = env_list->head;
-	while (current)
-	{
-		if (ft_strcmp(current->key, key) == 0)
-			return (current->value);
-		current = current->next;
-	}
-	return (NULL);
+    i = 0;
+    if (str[i] == '-' || str[i] == '+')
+        i++;
+    if (!str[i])
+        return (0);
+    while (str[i])
+    {
+        if (!ft_isdigit(str[i]))
+            return (0);
+        i++;
+    }
+    return (1);
 }
 
-void	set_env_value(t_env_list *env_list, const char *key, const char *value)
+int	builtin_exit(char **args, t_shell *shell)
 {
-	t_env_node	*current;
-	t_env_node	*new_node;
+    char	*clean_arg;
+    int		exit_code;
 
-	*current = env_list->head;
-	while (current)
-	{
-		if (ft_strcmp(current->key, key) == 0)
-		{
-			free(current->value);
-			current->value = ft_strdup(value);
-			return ();
-		}
-		current = current->next;
-	}
-	*new_node = malloc(sizeof(t_env_node));
-	new_node->key = ft_strdup(key);
-	new_node->value = ft_strdup(value);
-	new_node->next = env_list->head;
-	env_list->head = new_node;
-	env_list->size++;
-}
-
-int	builtin_env(t_env_list *env_list)
-{
-	t_env_node	*current;
-
-	*current = env_list->head;
-	while (current)
-	{
-		printf("%s=%s\n", current->key, current->value);
-		current = current->next;
-	}
-	return (0);
+    ft_printf("exit\n");
+    if (!args[1])
+    {
+        exit_code = shell->exit_status;
+        exit(exit_code);
+    }
+    clean_arg = remove_quote_markers(args[1]);
+    if (!is_valid_number(clean_arg))
+    {
+        ft_fprintf_stderr("minishell: exit: %s: numeric argument required\n",
+            args[1]);
+        free(clean_arg);
+        exit(255);
+    }
+    if (args[2])
+    {
+        ft_fprintf_stderr("minishell: exit: too many arguments\n");
+        free(clean_arg);
+        return (1);
+    }
+    exit_code = ft_atoi(clean_arg);
+    free(clean_arg);
+    exit(exit_code);
 }

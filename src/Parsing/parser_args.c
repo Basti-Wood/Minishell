@@ -3,14 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   parser_args.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/18 13:31:52 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/18 13:31:59 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/25 19:43:03 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+
+/* PARSING UTILITIES - Add these missing functions */
+int				add_argument(t_cmd *cmd, char *arg, int *argc);
+int				is_redirection_token(t_token_type type);
+int				handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell);
+t_cmd			*init_new_cmd(void);
+
+/* COMMAND MANAGEMENT */
+t_cmd			*create_cmd_node(void);
+void			add_redirection(t_cmd *cmd, t_redir *redir);
 
 int	add_argument(t_cmd *cmd, char *arg, int *argc)
 {
@@ -41,9 +51,8 @@ int	handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell)
 		return (handle_heredoc_redir(tokens, cmd, shell));
 	else
 	{
-		ft_fprintf_stderr("minishell:
-				syntax error near unexpected token `%s'\n",
-				(*tokens)->next ? (*tokens)->next->str : "newline");
+		ft_fprintf_stderr("minishell: syntax error near unexpected token `%s'\n",
+			(*tokens)->str);
 		shell->exit_status = 258;
 		return (0);
 	}
