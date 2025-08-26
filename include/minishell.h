@@ -262,6 +262,5 @@ void	add_quote_markers(char quote, char *result, int *res_len,
 		int is_end);
 int	handle_quote_extraction(const char *s, int *i, char *result,
 		int *res_len);
-int	handle_operator_extraction(const char *s, int *i, char *result, int *res_len)
 
 #endif
