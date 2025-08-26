@@ -12,13 +12,20 @@
 
 #include "../../include/minishell.h"
 
+static t_redir_type	get_output_type(t_token_type token_type)
+{
+	if (token_type == APPEND)
+		return (REDIR_APPEND);
+	return (REDIR_OUTPUT);
+}
+
 int	handle_output_redir(t_token **tokens, t_cmd *cmd)
 {
 	t_redir_type	type;
 	t_redir			*redir;
 	t_redir			*outfile_redir;
 
-	type = ((*tokens)->type == APPEND) ? REDIR_APPEND : REDIR_OUTPUT;
+	type = get_output_type((*tokens)->type);
 	*tokens = (*tokens)->next;
 	redir = create_redir(remove_quote_markers((*tokens)->str), type);
 	if (!redir)

@@ -12,16 +12,6 @@
 
 #include "../../include/minishell.h"
 
-/* PARSING UTILITIES - Add these missing functions */
-int				add_argument(t_cmd *cmd, char *arg, int *argc);
-int				is_redirection_token(t_token_type type);
-int				handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell);
-t_cmd			*init_new_cmd(void);
-
-/* COMMAND MANAGEMENT */
-t_cmd			*create_cmd_node(void);
-void			add_redirection(t_cmd *cmd, t_redir *redir);
-
 int	add_argument(t_cmd *cmd, char *arg, int *argc)
 {
 	cmd->argv = realloc(cmd->argv, (*argc + 2) * sizeof(char *));
@@ -35,25 +25,33 @@ int	add_argument(t_cmd *cmd, char *arg, int *argc)
 
 int	is_redirection_token(t_token_type type)
 {
-	if (type == INPUT || type == TRUNC || type == APPEND || type == HEREDOC)
+	if (type == INPUT)
+		return (1);
+	if (type == TRUNC)
+		return (1);
+	if (type == APPEND)
+		return (1);
+	if (type == HEREDOC)
 		return (1);
 	return (0);
+}
+
+static void	handle_syntax_error(t_shell *shell, char *token_str)
+{
+	ft_fprintf_stderr("minishell: syntax error near unexpected token `%s'\n",
+		token_str);
+	shell->exit_status = 258;
 }
 
 int	handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell)
 {
 	if ((*tokens)->type == INPUT && (*tokens)->next)
 		return (handle_input_redir(tokens, cmd));
-	else if (((*tokens)->type == TRUNC || (*tokens)->type == APPEND)
+	if (((*tokens)->type == TRUNC || (*tokens)->type == APPEND)
 		&& (*tokens)->next)
 		return (handle_output_redir(tokens, cmd));
-	else if ((*tokens)->type == HEREDOC && (*tokens)->next)
+	if ((*tokens)->type == HEREDOC && (*tokens)->next)
 		return (handle_heredoc_redir(tokens, cmd, shell));
-	else
-	{
-		ft_fprintf_stderr("minishell: syntax error near unexpected token `%s'\n",
-			(*tokens)->str);
-		shell->exit_status = 258;
-		return (0);
-	}
+	handle_syntax_error(shell, (*tokens)->str);
+	return (0);
 }

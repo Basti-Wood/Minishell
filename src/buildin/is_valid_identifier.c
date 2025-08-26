@@ -1,32 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   export.c                                           :+:      :+:    :+:   */
+/*   is_valid_identifier.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/28 16:02:12 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/25 20:00:04 by seftekha         ###   ########.fr       */
+/*   Created: 2025/08/26 11:31:49 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/26 11:32:03 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-int	builtin_export(char **args, t_env_list *env_list)
+int	is_valid_identifier(const char *str)
 {
 	int	i;
 
-	if (!args[1])
-	{
-		print_export_env(env_list);
+	if (!str || !*str)
 		return (0);
-	}
+	if (!ft_isalpha(str[0]) && str[0] != '_')
+		return (0);
 	i = 1;
-	while (args[i])
+	while (str[i])
 	{
-		if (!export_single_var(args[i], env_list))
-			return (1);
+		if (!ft_isalnum(str[i]) && str[i] != '_')
+			return (0);
 		i++;
 	}
-	return (0);
+	return (1);
 }

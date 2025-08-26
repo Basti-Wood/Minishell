@@ -14,7 +14,7 @@
 
 int	check_pipe_syntax(t_token *tokens, t_cmd *current, t_shell *shell)
 {
-	(void)tokens;  // Mark as unused if not needed
+	(void)tokens;
 	if (!current)
 	{
 		ft_fprintf_stderr("minishell: syntax error near unexpected token`|'\n");
@@ -33,23 +33,29 @@ void	add_cmd_to_list(t_cmd **head, t_cmd **current, t_cmd *new_cmd)
 	*current = new_cmd;
 }
 
-static	t_cmd	*handle_pipe_token(t_token **tokens, t_cmd *current,
-					t_shell *shell, t_cmd *head)
+static t_cmd	*handle_pipe_token(t_token **tokens, t_cmd *current,
+	t_shell *shell, t_cmd *head)
 {
 	if (!check_pipe_syntax(*tokens, current, shell))
-		return (free_cmds(head), NULL);
+	{
+		free_cmds(head);
+		return (NULL);
+	}
 	*tokens = (*tokens)->next;
 	return (head);
 }
 
-static	t_cmd	*handle_command_token(t_token **tokens, t_cmd **current,
-					t_shell *shell, t_cmd *head)
+static t_cmd	*handle_command_token(t_token **tokens, t_cmd **current,
+	t_shell *shell, t_cmd *head)
 {
 	t_cmd	*new_cmd;
 
-	new_cmd = process_commands(*tokens, shell);  // ✅ Fixed: added asterisk
+	new_cmd = process_command_tokens(tokens, shell);
 	if (!new_cmd && shell->exit_status == 130)
-		return (free_cmds(head), NULL);
+	{
+		free_cmds(head);
+		return (NULL);
+	}
 	if (new_cmd)
 		add_cmd_to_list(&head, current, new_cmd);
 	return (head);

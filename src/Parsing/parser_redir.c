@@ -10,8 +10,6 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/minishell.h"
-
 void	add_to_outfiles(t_cmd *cmd, t_redir *redir)
 {
 	t_redir	**last;
