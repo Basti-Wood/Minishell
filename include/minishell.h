@@ -234,7 +234,7 @@ int			add_argument(t_cmd *cmd, char *arg, int *argc);
 int			is_redirection_token(t_token_type type);
 int			handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell);
 t_cmd		*init_new_cmd(void);
-int			setup_child_pipes(int **pipes, int cmd_count, int cmd_index);
+int			setup_child_pipes(int i, int cmd_count, int **pipes);
 void		close_parent_pipes(int **pipes, int cmd_count);
 void		wait_for_children(pid_t *pids, int cmd_count, t_shell *shell);
 void		handle_broken_pipe(int status, int is_last_cmd);
@@ -243,6 +243,25 @@ int			execute_external_command(t_cmd *cmd, t_shell *shell);
 void		free_paths_array(char **paths);
 char		*build_full_path(char *dir, char *cmd);
 char		*search_in_paths(char *cmd, char *path_env);
-int			process_input_redir(redir, fd);
+int			process_input_redir(t_redir *redir, int *fd);
+t_cmd		*process_command_tokens(t_token **tokens, t_shell *shell);
+void		try_shell_script(char *executable, t_cmd *cmd, char **env_array);
+void		cleanup_process_resources(char *executable, char **env_array);
+void		free_string_array(char **array);
+int			validate_redir_list(t_redir *redirs);
+int			apply_input_fd(int fd);
+int			process_output_redir(t_redir *redir, int *fd);
+char		*get_var_name(char **src);
+char		*copy_string_to_dst(char *dst, const char *src);
+int			handle_operator_extraction(const char *s, int *i, char
+				*result, int *res_len);
+int			export_single_var(char *arg, t_env_list *env_list);
+int			is_valid_identifier(const char *str);
+void		print_export_env(t_env_list *env_list);
+void	add_quote_markers(char quote, char *result, int *res_len,
+		int is_end);
+int	handle_quote_extraction(const char *s, int *i, char *result,
+		int *res_len);
+int	handle_operator_extraction(const char *s, int *i, char *result, int *res_len)
 
 #endif

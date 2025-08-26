@@ -12,7 +12,7 @@
 
 #include "../../include/minishell.h"
 
-static void	add_quote_markers(char quote, char *result, int *res_len,
+void	add_quote_markers(char quote, char *result, int *res_len,
 		int is_end)
 {
 	if (quote == '\'')
@@ -31,7 +31,7 @@ static void	add_quote_markers(char quote, char *result, int *res_len,
 	}
 }
 
-static int	handle_quote_extraction(const char *s, int *i, char *result,
+int	handle_quote_extraction(const char *s, int *i, char *result,
 		int *res_len)
 {
 	char	quote;
@@ -46,6 +46,22 @@ static int	handle_quote_extraction(const char *s, int *i, char *result,
 		{
 			(*i)++;
 			add_quote_markers(quote, result, res_len, 1);
+		}
+		return (1);
+	}
+	return (0);
+}
+
+int	handle_operator_extraction(const char *s, int *i,
+		char *result, int *res_len)
+{
+	if (is_operator(s[*i]))
+	{
+		result[(*res_len)++] = s[(*i)++];
+		if ((s[*i - 1] == '>' && s[*i] == '>')
+			|| (s[*i - 1] == '<' && s[*i] == '<'))
+		{
+			result[(*res_len)++] = s[(*i)++];
 		}
 		return (1);
 	}

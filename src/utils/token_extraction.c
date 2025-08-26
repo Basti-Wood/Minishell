@@ -73,4 +73,3 @@ char	*extract_token(const char *s, int *pos)
 	*pos = i;
 	return (finalize_token(result, res_len));
 }
-}

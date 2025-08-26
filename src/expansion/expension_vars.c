@@ -12,7 +12,7 @@
 
 #include "../../include/minishell.h"
 
-static char	*get_var_name(char **src)
+char	*get_var_name(char **src)
 {
 	char	*start;
 	char	*result;
@@ -33,7 +33,7 @@ static char	*get_var_name(char **src)
 	return (result);
 }
 
-static char	*copy_string_to_dst(char *dst, const char *src)
+char	*copy_string_to_dst(char *dst, const char *src)
 {
 	while (*src)
 		*dst++ = *src++;
