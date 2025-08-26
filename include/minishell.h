@@ -243,5 +243,6 @@ int			execute_external_command(t_cmd *cmd, t_shell *shell);
 void		free_paths_array(char **paths);
 char		*build_full_path(char *dir, char *cmd);
 char		*search_in_paths(char *cmd, char *path_env);
+int			process_input_redir(redir, fd);
 
 #endif

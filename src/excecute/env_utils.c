@@ -12,7 +12,33 @@
 
 #include "../include/minishell.h"
 
-#include "../include/minishell.h"
+static char	*create_env_string(char *key, char *value)
+{
+	char	*env_str;
+	size_t	key_len;
+	size_t	value_len;
+
+	key_len = ft_strlen(key);
+	value_len = ft_strlen(value);
+	env_str = malloc(key_len + value_len + 2);
+	if (!env_str)
+		return (NULL);
+	ft_strcpy(env_str, key);
+	ft_strcat(env_str, "=");
+	ft_strcat(env_str, value);
+	return (env_str);
+}
+
+static void	free_env_array_partial(char **env_array, int count)
+{
+	int	j;
+
+	j = 0;
+	while (j < count)
+		free(env_array[j++]);
+	free(env_array);
+}
+
 
 char	**env_list_to_array(t_env_list *env_list)
 {
@@ -42,29 +68,4 @@ char	**env_list_to_array(t_env_list *env_list)
 	return (env_array);
 }
 
-static char	*create_env_string(char *key, char *value)
-{
-	char	*env_str;
-	size_t	key_len;
-	size_t	value_len;
 
-	key_len = ft_strlen(key);
-	value_len = ft_strlen(value);
-	env_str = malloc(key_len + value_len + 2);
-	if (!env_str)
-		return (NULL);
-	ft_strcpy(env_str, key);
-	ft_strcat(env_str, "=");
-	ft_strcat(env_str, value);
-	return (env_str);
-}
-
-static void	free_env_array_partial(char **env_array, int count)
-{
-	int	j;
-
-	j = 0;
-	while (j < count)
-		free(env_array[j++]);
-	free(env_array);
-}

@@ -12,7 +12,7 @@
 
 #include "../include/minishell.h"
 
-static void	shift_argv(char ***argv)
+void	shift_argv(char ***argv)
 {
 	int	i;
 	int	j;
