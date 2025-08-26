@@ -57,6 +57,21 @@ t_cmd	*process_command_tokens(t_token **tokens, t_shell *shell)
 	return (new_cmd);
 }
 
+static void	add_cmd_to_pipeline(t_cmd **cmd_list,
+								t_cmd **current_cmd, t_cmd *new_cmd)
+{
+	if (!*cmd_list)
+	{
+		*cmd_list = new_cmd;
+		*current_cmd = new_cmd;
+	}
+	else
+	{
+		(*current_cmd)->next = new_cmd;
+		*current_cmd = new_cmd;
+	}
+}
+
 t_cmd	*parse_pipeline(t_token **tokens, t_shell *shell)
 {
 	t_cmd	*cmd_list;
@@ -73,16 +88,7 @@ t_cmd	*parse_pipeline(t_token **tokens, t_shell *shell)
 			free_cmds(cmd_list);
 			return (NULL);
 		}
-		if (!cmd_list)
-		{
-			cmd_list = new_cmd;
-			current_cmd = new_cmd;
-		}
-		else
-		{
-			current_cmd->next = new_cmd;
-			current_cmd = new_cmd;
-		}
+		add_cmd_to_pipeline(&cmd_list, &current_cmd, new_cmd);
 		if (*tokens && (*tokens)->type == PIPE)
 			*tokens = (*tokens)->next;
 	}

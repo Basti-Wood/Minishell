@@ -36,15 +36,6 @@ static void	cleanup_pipes(int **pipes, int cmd_count)
 	free(pipes);
 }
 
-typedef struct s_fork_data
-{
-	t_cmd	*cmds;
-	int		**pipes;
-	pid_t	*pids;
-	int		cmd_count;
-	t_shell	*shell;
-}	t_fork_data;
-
 static int	execute_single_child(t_fork_data *data, int i, t_cmd *current)
 {
 	data->pids[i] = fork();
@@ -54,8 +45,7 @@ static int	execute_single_child(t_fork_data *data, int i, t_cmd *current)
 		return (1);
 	}
 	if (data->pids[i] == 0)
-		setup_child_process(i, data->cmd_count, data->pipes, 
+		setup_child_process(i, data->cmd_count, data->pipes,
 			current, data->shell);
 	return (0);
 }
-

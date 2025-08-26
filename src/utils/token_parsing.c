@@ -51,32 +51,6 @@ static int	handle_operator_in_count(const char *s, int *i, int *count,
 	return (0);
 }
 
-int	count_tokens(const char *s)
-{
-	int		count;
-	int		i;
-	int		in_token;
-	char	quote;
-
-	count = 0;
-	i = 0;
-	in_token = 0;
-	quote = 0;
-	while (s[i])
-	{
-		i = skip_spaces(s, i);
-		if (!s[i])
-			break ;
-		if (!in_token)
-#include "../../include/minishell.h"
-
-int	skip_spaces(const char *s, int i)
-{
-	while (s[i] && ft_isspace(s[i]))
-		i++;
-	return (i);
-}
-
 static int	handle_quote_in_count(const char *s, int *i, char *quote)
 {
 	if (is_quote(s[*i]) && !*quote)
@@ -107,59 +81,4 @@ static int	handle_operator_in_count(const char *s, int *i, int *count,
 		return (1);
 	}
 	return (0);
-}
-
-int	count_tokens(const char *s)
-{
-	int		count;
-	int		i;
-	int		in_token;
-	char	quote;
-
-	count = 0;
-	i = 0;
-	in_token = 0;
-	quote = 0;
-	while (s[i])
-	{
-		i = skip_spaces(s, i);
-		if (!s[i])
-			break ;
-		if (!in_token)
-		{
-			count++;
-			in_token = 1;
-		}
-		if (handle_quote_in_count(s, &i, &quote))
-			continue ;
-		if (handle_operator_in_count(s, &i, &count, &in_token))
-			continue ;
-		while (s[i] && !ft_isspace(s[i]) && !is_operator(s[i])
-			&& !is_quote(s[i]))
-			i++;
-		if (s[i] && (is_quote(s[i]) || (!ft_isspace(s[i])
-					&& !is_operator(s[i]))))
-			continue ;
-		else
-			in_token = 0;
-	}
-	return (count);
-}		{
-			count++;
-			in_token = 1;
-		}
-		if (handle_quote_in_count(s, &i, &quote))
-			continue ;
-		if (handle_operator_in_count(s, &i, &count, &in_token))
-			continue ;
-		while (s[i] && !ft_isspace(s[i]) && !is_operator(s[i])
-			&& !is_quote(s[i]))
-			i++;
-		if (s[i] && (is_quote(s[i]) || (!ft_isspace(s[i])
-					&& !is_operator(s[i]))))
-			continue ;
-		else
-			in_token = 0;
-	}
-	return (count);
 }

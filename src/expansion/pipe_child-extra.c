@@ -29,14 +29,13 @@ static void	execute_child_command(t_cmd *current, t_shell *shell)
 	exit(0);
 }
 
-void	setup_child_process(int i, int cmd_count, int **pipes,
-	t_cmd *current, t_shell *shell)
+void	setup_child_process(t_child_data *data)
 {
 	signal(SIGPIPE, SIG_DFL);
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
-	setup_child_pipes(i, cmd_count, pipes);
-	if (handle_redirections_in_order(current) == -1)
+	setup_child_pipes(data->pipes, data->cmd_count, data->i);
+	if (handle_redirections_in_order(data->current) == -1)
 		exit(1);
-	execute_child_command(current, shell);
+	execute_child_command(data->current, data->shell);
 }

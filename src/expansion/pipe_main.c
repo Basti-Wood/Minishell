@@ -38,29 +38,16 @@ static void	cleanup_pipes(int **pipes, int cmd_count)
 	free(pipes);
 }
 
-static void	init_fork_data(t_fork_data *data, t_cmd *cmds, int **pipes,
-		pid_t *pids, int cmd_count, t_shell *shell)
+static int	fork_and_execute_children(t_fork_data *data)
 {
-	data->cmds = cmds;
-	data->pipes = pipes;
-	data->pids = pids;
-	data->cmd_count = cmd_count;
-	data->shell = shell;
-}
+	int		i;
+	t_cmd	*current;
 
-static int	fork_and_execute_children(t_cmd *cmds, int **pipes,
-		pid_t *pids, int cmd_count, t_shell *shell)
-{
-	t_fork_data	data;
-	int			i;
-	t_cmd		*current;
-
-	init_fork_data(&data, cmds, pipes, pids, cmd_count, shell);
-	current = cmds;
+	current = data->cmds;
 	i = 0;
-	while (i < cmd_count && current)
+	while (i < data->cmd_count && current)
 	{
-		if (execute_single_child(&data, i, current))
+		if (execute_single_child(data, i, current))
 			return (1);
 		current = current->next;
 		i++;
