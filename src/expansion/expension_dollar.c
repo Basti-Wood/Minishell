@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   expension_dollar.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/08 17:40:46 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/08 17:40:57 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,14 +29,14 @@ static char	*handle_variable(char **src, char *dst, t_shell *shell)
 	char	*var_value;
 
 	var_name = get_var_name(src);
-	var_value = get_env_value(shell->envp, var_name);
+	var_value = get_env_value(&shell->env_list, var_name);
 	if (var_value)
 		dst = copy_string_to_dst(dst, var_value);
 	free(var_name);
 	return (dst);
 }
 
-static char	*expand_dollar(char **src, char *dst, t_shell *shell)
+char	*expand_dollar(char **src, char *dst, t_shell *shell)
 {
 	(*src)++;
 	if (!**src)

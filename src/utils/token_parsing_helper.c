@@ -1,16 +1,48 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   token_extraction.c                                 :+:      :+:    :+:   */
+/*   token_parsing_helper.c                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/18 18:10:36 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/18 18:10:51 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+
+static int	handle_quote_in_count(const char *s, int *i, char *quote)
+{
+	if (is_quote(s[*i]) && !*quote)
+	{
+		*quote = s[(*i)++];
+		while (s[*i] && s[*i] != *quote)
+			(*i)++;
+		if (s[*i] == *quote)
+			(*i)++;
+		*quote = 0;
+		return (1);
+	}
+	return (0);
+}
+
+static int	handle_operator_in_count(const char *s, int *i, int *count,
+		int *in_token)
+{
+	if (is_operator(s[*i]))
+	{
+		if (!*in_token || *i == skip_spaces(s, 0))
+			(*count)++;
+		if ((s[*i] == '>' && s[*i + 1] == '>') || (s[*i] == '<'
+				&& s[*i + 1] == '<'))
+			(*i)++;
+		(*i)++;
+		*in_token = 0;
+		return (1);
+	}
+	return (0);
+}
 
 static int	handle_regular_chars(const char *s, int *i)
 {
@@ -54,12 +86,10 @@ int	count_tokens(const char *s)
 	int		count;
 	int		i;
 	int		in_token;
-	char	quote;
 
 	count = 0;
 	i = 0;
 	in_token = 0;
-	quote = 0;
 	while (s[i])
 	{
 		i = skip_spaces(s, i);

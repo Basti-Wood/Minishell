@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipe_child-extra.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/08 17:45:01 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/08 17:45:08 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ void	setup_child_process(t_child_data *data)
 	signal(SIGPIPE, SIG_DFL);
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
-	setup_child_pipes(data->pipes, data->cmd_count, data->i);
+	setup_child_pipes(data->i, data->cmd_count, data->pipes);
 	if (handle_redirections_in_order(data->current) == -1)
 		exit(1);
 	execute_child_command(data->current, data->shell);

@@ -6,7 +6,7 @@
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:04:15 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/25 20:20:36 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,7 @@ void	execute_process(char *executable, t_cmd *cmd, char **env_array)
 	}
 }
 
-static void	cleanup_process_resources(char *executable, char **env_array)
+void	cleanup_process_resources(char *executable, char **env_array)
 {
 	if (executable && ft_strchr(executable, '/'))
 		free(executable);
@@ -37,7 +37,7 @@ static void	cleanup_process_resources(char *executable, char **env_array)
 		free_string_array(env_array);
 }
 
-static int	get_argc(char **argv)
+int	get_argc(char **argv)
 {
 	int	count;
 
@@ -49,7 +49,7 @@ static int	get_argc(char **argv)
 	return (count);
 }
 
-static char	**create_sh_argv(char *executable, char **argv, int argc)
+char	**create_sh_argv(char *executable, char **argv, int argc)
 {
 	char	**new_argv;
 	int		i;

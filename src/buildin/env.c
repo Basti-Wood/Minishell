@@ -6,7 +6,7 @@
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:02:55 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/26 13:49:07 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:33:23 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,7 +35,7 @@ int	builtin_exit(char **args, t_shell *shell)
 	char	*clean_arg;
 	int		exit_code;
 
-	ft_printf("exit\n");
+	printf("exit\n");
 	if (!args[1])
 	{
 		exit_code = shell->exit_status;

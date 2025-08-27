@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   file_validation.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/08 16:54:15 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/08 16:54:33 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,22 +27,6 @@ int	validate_input_file(const char *filename)
 	{
 		ft_fprintf_stderr("minishell: %s: No such file or directory\n",
 			filename);
-		return (0);
-	}
-	if (access(filename, R_OK) == -1)
-	{
-		ft_fprintf_stderr("minishell: %s: Permission denied\n", filename);
-		return (0);
-	}
-	return (1);
-}
-
-int	validate_input_file(const char *filename)
-{
-	if (access(filename, F_OK) == -1)
-	{
-		ft_fprintf_stderr
-				("minishell: %s: No such file or directory\n", filename);
 		return (0);
 	}
 	if (access(filename, R_OK) == -1)

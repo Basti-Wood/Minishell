@@ -3,16 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   pipe_setup.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/08 17:44:01 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/08 17:44:15 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-static int	count_commands(t_cmd *cmds)
+int	count_commands(t_cmd *cmds)
 {
 	int		count;
 	t_cmd	*current;
@@ -38,7 +38,7 @@ static void	cleanup_failed_pipes(int **pipes, int i)
 	free(pipes);
 }
 
-static int	**allocate_pipes(int cmd_count)
+int	**allocate_pipes(int cmd_count)
 {
 	int	**pipes;
 	int	i;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipe_child.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/08 17:44:32 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/08 17:44:41 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,28 +25,29 @@ static void	close_all_child_pipes(int **pipes, int cmd_count)
 	}
 }
 
-static void	setup_child_pipes(int i, int cmd_count, int **pipes)
+int	setup_child_pipes(int i, int cmd_count, int **pipes)
 {
 	if (i > 0)
 		dup2(pipes[i - 1][0], STDIN_FILENO);
 	if (i < cmd_count - 1)
 		dup2(pipes[i][1], STDOUT_FILENO);
 	close_all_child_pipes(pipes, cmd_count);
+	return (0);
 }
 
-static void	execute_child_external(t_cmd *current, t_shell *shell)
+void	execute_child_external(t_cmd *current, t_shell *shell)
 {
 	char	*executable;
 	char	**env_array;
 
-	executable = find_executable(current->argv[0], shell->envp);
+	executable = find_executable(current->argv[0], &shell->env_list);
 	if (!executable)
 	{
 		ft_fprintf_stderr("minishell: %s: command not found\n",
 			current->argv[0]);
 		exit(127);
 	}
-	env_array = env_list_to_array(shell->envp);
+	env_array = env_list_to_array(&shell->env_list);
 	if (!env_array)
 	{
 		free(executable);

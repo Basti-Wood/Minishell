@@ -3,15 +3,45 @@
 /*                                                        :::      ::::::::   */
 /*   pipe_main_helpers.c                                :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/25 18:37:10 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/25 18:38:05 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-static int	execute_single_child(t_fork_data *data, int i, t_cmd *current)
+#include "../../include/minishell.h"
+
+void	close_all_pipes(int **pipes, int cmd_count)
 {
+	int	i;
+
+	i = 0;
+	while (i < cmd_count - 1)
+	{
+		close(pipes[i][0]);
+		close(pipes[i][1]);
+		i++;
+	}
+}
+
+void	cleanup_pipes(int **pipes, int cmd_count)
+{
+	int	i;
+
+	i = 0;
+	while (i < cmd_count - 1)
+	{
+		free(pipes[i]);
+		i++;
+	}
+	free(pipes);
+}
+
+int	execute_single_child(t_fork_data *data, int i, t_cmd *current)
+{
+	t_child_data	child_data;
+
 	data->pids[i] = fork();
 	if (data->pids[i] == -1)
 	{
@@ -19,12 +49,18 @@ static int	execute_single_child(t_fork_data *data, int i, t_cmd *current)
 		return (1);
 	}
 	if (data->pids[i] == 0)
-		setup_child_process(i, data->cmd_count, data->pipes,
-			current, data->shell);
+	{
+		child_data.i = i;
+		child_data.cmd_count = data->cmd_count;
+		child_data.pipes = data->pipes;
+		child_data.current = current;
+		child_data.shell = data->shell;
+		setup_child_process(&child_data);
+	}
 	return (0);
 }
 
-static int	allocate_resources(int **pipes, pid_t **pids, int cmd_count)
+int	allocate_resources(int ***pipes, pid_t **pids, int cmd_count)
 {
 	*pipes = allocate_pipes(cmd_count);
 	*pids = malloc(sizeof(pid_t) * cmd_count);
@@ -36,7 +72,7 @@ static int	allocate_resources(int **pipes, pid_t **pids, int cmd_count)
 	return (0);
 }
 
-static void	cleanup_resources(int **pipes, pid_t *pids, int cmd_count)
+void	cleanup_resources(int **pipes, pid_t *pids, int cmd_count)
 {
 	close_all_pipes(pipes, cmd_count);
 	cleanup_pipes(pipes, cmd_count);

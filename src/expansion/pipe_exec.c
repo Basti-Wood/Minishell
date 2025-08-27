@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   pipe_exec.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/08 17:45:28 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/08 17:45:37 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,7 +21,7 @@ static int	get_child_exit_status(int child_status)
 	return (0);
 }
 
-int	wait_for_children(pid_t *pids, int cmd_count)
+void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
 {
 	int	status;
 	int	i;
@@ -39,5 +39,5 @@ int	wait_for_children(pid_t *pids, int cmd_count)
 		}
 		i++;
 	}
-	return (status);
+	shell->exit_status = status;
 }

@@ -6,7 +6,7 @@
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:02:28 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/26 10:45:35 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:32:15 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,6 +192,7 @@ char		**env_list_to_array(t_env_list *env_list);
 t_env_node	*create_env_node(const char *key, const char *value);
 void		remove_env_node(t_env_list *env_list, const char *key);
 char		*expand_variables(char *str, t_shell *shell);
+char		*expand_dollar(char **src, char *dst, t_shell *shell);
 char		*remove_quote_markers(const char *str);
 char		*get_variable_value(t_shell *shell, char *var_name);
 int			should_expand_in_context(char c, int in_single_quotes);
@@ -234,9 +235,18 @@ int			add_argument(t_cmd *cmd, char *arg, int *argc);
 int			is_redirection_token(t_token_type type);
 int			handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell);
 t_cmd		*init_new_cmd(void);
-int			setup_child_pipes(int i, int cmd_count, int **pipes);
+int		setup_child_pipes(int i, int cmd_count, int **pipes);
+void		execute_child_external(t_cmd *current, t_shell *shell);
 void		close_parent_pipes(int **pipes, int cmd_count);
 void		wait_for_children(pid_t *pids, int cmd_count, t_shell *shell);
+void		close_all_pipes(int **pipes, int cmd_count);
+void		cleanup_pipes(int **pipes, int cmd_count);
+void		setup_child_process(t_child_data *data);
+int		execute_single_child(t_fork_data *data, int i, t_cmd *current);
+int		allocate_resources(int ***pipes, pid_t **pids, int cmd_count);
+void		cleanup_resources(int **pipes, pid_t *pids, int cmd_count);
+int		count_commands(t_cmd *cmds);
+int		**allocate_pipes(int cmd_count);
 void		handle_broken_pipe(int status, int is_last_cmd);
 void		print_sorted_env(t_env_list *env_list);
 int			execute_external_command(t_cmd *cmd, t_shell *shell);
@@ -247,6 +257,9 @@ int			process_input_redir(t_redir *redir, int *fd);
 t_cmd		*process_command_tokens(t_token **tokens, t_shell *shell);
 void		try_shell_script(char *executable, t_cmd *cmd, char **env_array);
 void		cleanup_process_resources(char *executable, char **env_array);
+void		handle_exec_failure(char *executable, char **env_array);
+int		get_argc(char **argv);
+char		**create_sh_argv(char *executable, char **argv, int argc);
 void		free_string_array(char **array);
 int			validate_redir_list(t_redir *redirs);
 int			apply_input_fd(int fd);
@@ -262,5 +275,6 @@ void		add_quote_markers(char quote, char *result, int *res_len,
 				int is_end);
 int			handle_quote_extraction(const char *s, int *i, char *result,
 				int *res_len);
+int			builtin_exit(char **args, t_shell *shell);
 
 #endif

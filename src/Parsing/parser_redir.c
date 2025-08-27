@@ -3,12 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   parser_redir.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/18 13:30:35 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/18 13:30:57 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:09:56 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#include "../../include/minishell.h"
 
 void	add_to_outfiles(t_cmd *cmd, t_redir *redir)
 {

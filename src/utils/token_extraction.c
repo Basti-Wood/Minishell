@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   token_extraction.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/18 18:10:36 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/18 18:10:51 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,6 @@ char	*extract_token(const char *s, int *pos)
 	int		i;
 	char	*result;
 	int		res_len;
-	int		token_started;
 	int		process_result;
 
 	i = *pos;
@@ -59,14 +58,11 @@ char	*extract_token(const char *s, int *pos)
 	if (!result)
 		return (NULL);
 	res_len = 0;
-	token_started = 0;
 	while (s[i])
 	{
 		process_result = process_character(s, &i, result, &res_len);
 		if (process_result == -1)
 			break ;
-		if (process_result == 1)
-			token_started = 1;
 		if (should_break(s, i))
 			break ;
 	}
