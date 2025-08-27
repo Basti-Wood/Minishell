@@ -10,6 +10,8 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+#include "../../include/minishell.h"
+
 int	validate_input_redir(t_redir *redir)
 {
 	if (access(redir->filename, F_OK) == -1)

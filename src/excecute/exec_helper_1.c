@@ -76,7 +76,7 @@ static int	handle_input_redirection(t_redir *redir)
 	return (0);
 }
 
-int	handle_output_redirection(t_redir *redir, int flags)
+int	apply_output_redirection(t_redir *redir, int flags)
 {
 	int	fd;
 
@@ -104,10 +104,10 @@ int	handle_single_redirection(t_redir *redir)
 	if (redir->type == REDIR_INPUT)
 		return (handle_input_redirection(redir));
 	else if (redir->type == REDIR_OUTPUT)
-		return (handle_output_redirection(redir,
+		return (apply_output_redirection(redir,
 				O_WRONLY | O_CREAT | O_TRUNC));
 	else if (redir->type == REDIR_APPEND)
-		return (handle_output_redirection(redir,
+		return (apply_output_redirection(redir,
 				O_WRONLY | O_CREAT | O_APPEND));
 	else if (redir->type == REDIR_HEREDOC)
 		return (0);

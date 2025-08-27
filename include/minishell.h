@@ -333,11 +333,22 @@ void							free_string_array(char **array);
 t_token							*handle_empty_expansions(t_token *tokens);
 t_token							*create_token(char **elements, t_shell *shell);
 t_token							*assign_token_types(t_token *tokens);
-int	handle_operator_in_count(const char *s, int *i, int *count,
-		int *in_token);
-int	handle_quote_in_count(const char *s, int *i, char *quote);
-int	validate_single_redir(t_redir *redir);
-int	validate_output_redir(t_redir *redir);
-int	validate_input_redir(t_redir *redir);
+int								handle_operator_in_count(const char *s, int *i,
+									int *count, int *in_token);
+int								handle_quote_in_count(const char *s, int *i,
+									char *quote);
+int								validate_single_redir(t_redir *redir);
+int								validate_output_redir(t_redir *redir);
+int								validate_input_redir(t_redir *redir);
+int								execute_with_redirections(t_cmd *cmd,
+									t_shell *shell);
+int								handle_redirections_in_order(t_cmd *cmd);
+int								handle_single_redirection(t_redir *redir);
+int								save_file_descriptors(int *saved_stdin,
+									int *saved_stdout);
+void							restore_file_descriptors(int saved_stdin,
+									int saved_stdout);
+int								apply_output_redirection(t_redir *redir,
+									int flags);
 
 #endif
