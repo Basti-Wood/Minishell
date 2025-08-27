@@ -37,33 +37,22 @@ void	cleanup_process_resources(char *executable, char **env_array)
 		free_string_array(env_array);
 }
 
-int	get_argc(char **argv)
+static int	init_sh_argv_base(char **new_argv, char *executable)
 {
-	int	count;
-
-	count = 0;
-	if (!argv)
-		return (0);
-	while (argv[count])
-		count++;
-	return (count);
-}
-
-char	**create_sh_argv(char *executable, char **argv, int argc)
-{
-	char	**new_argv;
-	int		i;
-
-	new_argv = malloc(sizeof(char *) * (argc + 3));
-	if (!new_argv)
-		return (NULL);
 	new_argv[0] = ft_strdup("sh");
 	new_argv[1] = ft_strdup(executable);
 	if (!new_argv[0] || !new_argv[1])
 	{
 		free_string_array(new_argv);
-		return (NULL);
+		return (-1);
 	}
+	return (0);
+}
+
+static int	copy_remaining_args(char **new_argv, char **argv, int argc)
+{
+	int	i;
+
 	i = 1;
 	while (i < argc)
 	{
@@ -71,10 +60,24 @@ char	**create_sh_argv(char *executable, char **argv, int argc)
 		if (!new_argv[i + 1])
 		{
 			free_string_array(new_argv);
-			return (NULL);
+			return (-1);
 		}
 		i++;
 	}
+	return (0);
+}
+
+char	**create_sh_argv(char *executable, char **argv, int argc)
+{
+	char	**new_argv;
+
+	new_argv = malloc(sizeof(char *) * (argc + 3));
+	if (!new_argv)
+		return (NULL);
+	if (init_sh_argv_base(new_argv, executable) == -1)
+		return (NULL);
+	if (copy_remaining_args(new_argv, argv, argc) == -1)
+		return (NULL);
 	new_argv[argc + 1] = NULL;
 	return (new_argv);
 }

@@ -32,5 +32,3 @@ void	try_shell_script(char *executable, t_cmd *cmd, char **env_array)
 	else
 		execve("/bin/sh", sh_argv, env_array);
 }
-
-

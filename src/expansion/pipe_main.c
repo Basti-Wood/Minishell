@@ -31,9 +31,9 @@ static int	fork_and_execute_children(t_fork_data *data)
 
 int	execute_pipeline(t_cmd *cmds, t_shell *shell)
 {
-	int		**pipes;
+	int			**pipes;
 	pid_t		*pids;
-	int		cmd_count;
+	int			cmd_count;
 	t_fork_data	fork_data;
 
 	cmd_count = count_commands(cmds);

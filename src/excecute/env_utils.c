@@ -39,7 +39,6 @@ static void	free_env_array_partial(char **env_array, int count)
 	free(env_array);
 }
 
-
 char	**env_list_to_array(t_env_list *env_list)
 {
 	char		**env_array;
@@ -67,5 +66,3 @@ char	**env_list_to_array(t_env_list *env_list)
 	env_array[i] = NULL;
 	return (env_array);
 }
-
-
