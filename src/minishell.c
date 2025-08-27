@@ -60,12 +60,24 @@ void minishell(char **env)
             add_history(line);
 
         shell.input = line;
-	tokens = tokenize(shell.input, &shell);
-		if (!tokens)
+        tokens = tokenize(shell.input, &shell);
+        if (!tokens)
+        {
+			free(line);
 			continue;
+		}
 		tokens = handle_empty_expansions(tokens);
 		if (!tokens)
+		{
+			free(line);
 			continue;
+		}
+		tokens = expand_wildcards_in_tokens(tokens);
+		if (!tokens)
+		{
+			free(line);
+			continue;
+		}
 		cmds = parse_tokens(tokens, &shell);
 		free_tokens(tokens);
 

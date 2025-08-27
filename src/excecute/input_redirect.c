@@ -21,7 +21,7 @@ static int	process_input_list(t_redir *redir, int *fd)
 	return (process_input_list(redir->next, fd));
 }
 
-int	handle_input_redirection(t_cmd *cmd)
+int	handle_input_redirections(t_cmd *cmd)
 {
 	int	fd;
 

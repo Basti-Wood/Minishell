@@ -14,12 +14,12 @@
 # define MINISHELL_H
 
 # include "../libft/include/ft_printf.h"
-# include <curses.h>
 # include <dirent.h>
 # include <errno.h>
 # include <fcntl.h>
-# include <readline/history.h>
-# include <readline/readline.h>
+#include <stdio.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 # include <signal.h>
 # include <stdarg.h>
 # include <stdbool.h>
@@ -32,6 +32,7 @@
 # include <sys/wait.h>
 # include <termios.h>
 # include <unistd.h>
+# include <glob.h>
 
 # define SINGLE_QUOTE_START '\001'
 # define SINGLE_QUOTE_END '\002'
@@ -211,6 +212,9 @@ char							*get_variable_value(t_shell *shell,
 int								should_expand_in_context(char c,
 									int in_single_quotes);
 int								handle_redirections_in_order(t_cmd *cmd);
+int								handle_input_redirections(t_cmd *cmd);
+int								handle_output_redirection(t_cmd *cmd);
+int								handle_input_redirection(t_redir *redir);
 int								handle_input_redir(t_token **tokens,
 									t_cmd *cmd);
 int								handle_heredoc(char *delimiter, t_shell *shell);
@@ -298,40 +302,23 @@ int								validate_redir_list(t_redir *redirs);
 int								apply_input_fd(int fd);
 int								process_output_redir(t_redir *redir, int *fd);
 char							*get_var_name(char **src);
+char							**expand_wildcard(char *pattern);
+int								has_wildcard(char *str);
+t_token							*expand_wildcards_in_tokens(t_token *tokens);
 char							*copy_string_to_dst(char *dst, const char *src);
 int								handle_operator_extraction(const char *s,
 									int *i, char *result, int *res_len);
 int								export_single_var(char *arg,
 									t_env_list *env_list);
+void							safe_free(void **ptr);
+char							*safe_strdup(const char *s);
+void							*safe_malloc(size_t size);
+int								safe_close(int fd);
+void							safe_dup2(int oldfd, int newfd);
 int								is_valid_identifier(const char *str);
 void							print_export_env(t_env_list *env_list);
 void							add_quote_markers(char quote, char *result,
 									int *res_len, int is_end);
-int								handle_quote_extraction(const char *s, int *i,
-									char *result, int *res_len);
-int								builtin_exit(char **args, t_shell *shell);
-
-t_token							*tokenize(const char *input, t_shell *shell);
-t_token							*handle_empty_expansions(t_token *tokens);
-
-char							*get_env_value(t_env_list *env_list,
-									const char *key);
-void							set_env_value(t_env_list *env_list,
-									const char *key, const char *value);
-
-int								execute_with_redirections(t_cmd *cmd,
-									t_shell *shell);
-int								handle_redirections_in_order(t_cmd *cmd);
-
-int								process_input_redir(t_redir *redir, int *fd);
-int								process_output_redir(t_redir *redir, int *fd);
-int								apply_input_fd(int fd);
-int								validate_redir_list(t_redir *redirs);
-
-void							free_string_array(char **array);
-
-t_token							*handle_empty_expansions(t_token *tokens);
-t_token							*create_token(char **elements, t_shell *shell);
 t_token							*assign_token_types(t_token *tokens);
 int								handle_operator_in_count(const char *s, int *i,
 									int *count, int *in_token);
@@ -340,9 +327,6 @@ int								handle_quote_in_count(const char *s, int *i,
 int								validate_single_redir(t_redir *redir);
 int								validate_output_redir(t_redir *redir);
 int								validate_input_redir(t_redir *redir);
-int								execute_with_redirections(t_cmd *cmd,
-									t_shell *shell);
-int								handle_redirections_in_order(t_cmd *cmd);
 int								handle_single_redirection(t_redir *redir);
 int								save_file_descriptors(int *saved_stdin,
 									int *saved_stdout);
@@ -350,5 +334,9 @@ void							restore_file_descriptors(int saved_stdin,
 									int saved_stdout);
 int								apply_output_redirection(t_redir *redir,
 									int flags);
+void							handle_quote_markers(char c, int *in_single_quotes);
+int								should_copy_char(char c);
+int								validate_input_files_before_output(t_cmd *cmd);
+int								validate_output_file(const char *filename);
 
 #endif

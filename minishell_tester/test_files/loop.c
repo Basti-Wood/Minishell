@@ -1,27 +1,29 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   free_tokens.c                                      :+:      :+:    :+:   */
+/*   loop.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*   By: lalex-ku <lalex-ku@42sp.org.br>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/18 10:00:00 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/18 10:00:00 by seftekha         ###   ########.fr       */
+/*   Created: 2022/06/22 17:32:45 by lalex-ku          #+#    #+#             */
+/*   Updated: 2022/06/22 17:32:50 by lalex-ku         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include <fcntl.h>
+#include <stdio.h>
+#include <unistd.h>
 
-void	free_tokens(t_token *tokens)
+int	main(int argc, char const *argv[])
 {
-	t_token	*tmp;
+	int	pid;
 
-	while (tokens)
+	pid = fork();
+	open("infile", O_RDONLY);
+	while (1)
 	{
-		tmp = tokens;
-		tokens = tokens->next;
-		if (tmp->str)
-			free(tmp->str);
-		free(tmp);
+		printf("Helloo miniHELL %i\n", pid);
+		sleep(1);
 	}
+	return (0);
 }

@@ -1,27 +1,38 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   free_tokens.c                                      :+:      :+:    :+:   */
+/*   free_cmds_fixed.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/18 10:00:00 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/18 10:00:00 by seftekha         ###   ########.fr       */
+/*   Updated: Fixed version to prevent double free       ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
-void	free_tokens(t_token *tokens)
+void	free_cmds(t_cmd *cmds)
 {
-	t_token	*tmp;
+	t_cmd	*tmp;
 
-	while (tokens)
+	while (cmds)
 	{
-		tmp = tokens;
-		tokens = tokens->next;
-		if (tmp->str)
-			free(tmp->str);
+		tmp = cmds;
+		cmds = cmds->next;
+		
+		// Free argv array
+		if (tmp->argv)
+			free_argv(tmp->argv);
+		
+		// Free only the main redirs list (no more infiles/outfiles)
+		free_redirs(tmp->redirs);
+		
+		// Close heredoc fd if still open
+		if (tmp->heredoc > 0)
+			close(tmp->heredoc);
+		
+		// Free the cmd structure itself
 		free(tmp);
 	}
 }

@@ -37,39 +37,30 @@ int	execute_with_redirections(t_cmd *cmd, t_shell *shell)
 	return (result);
 }
 
-static int	validate_input_file(char *filename)
-{
-	if (access(filename, F_OK) == -1)
-	{
-		ft_fprintf_stderr("minishell: %s: No such file or directory\n",
-			filename);
-		return (-1);
-	}
-	if (access(filename, R_OK) == -1)
-	{
-		ft_fprintf_stderr("minishell: %s: Permission denied\n",
-			filename);
-		return (-1);
-	}
-	return (0);
-}
-
-static int	handle_input_redirection(t_redir *redir)
+int	handle_input_redirection(t_redir *redir)
 {
 	int	fd;
 
-	if (validate_input_file(redir->filename) == -1)
-		return (-1);
-	fd = open(redir->filename, O_RDONLY);
-	if (fd == -1)
+	if (!redir || !redir->filename)
+		return (0);
+	if (access(redir->filename, F_OK) == -1)
 	{
-		perror("open");
+		ft_fprintf_stderr("minishell: %s: No such file or directory\n",
+			redir->filename);
 		return (-1);
 	}
-	if (dup2(fd, STDIN_FILENO) == -1)
+	if (access(redir->filename, R_OK) == -1)
 	{
-		perror("dup2");
-		close(fd);
+		ft_fprintf_stderr("minishell: %s: Permission denied\n",
+			redir->filename);
+		return (-1);
+	}
+	fd = open(redir->filename, O_RDONLY);
+	if (fd == -1 || dup2(fd, STDIN_FILENO) == -1)
+	{
+		perror("input redirection");
+		if (fd != -1)
+			close(fd);
 		return (-1);
 	}
 	close(fd);

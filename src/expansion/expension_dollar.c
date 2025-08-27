@@ -31,22 +31,42 @@ static char	*handle_variable(char **src, char *dst, t_shell *shell)
 	var_name = get_var_name(src);
 	var_value = get_env_value(&shell->env_list, var_name);
 	if (var_value)
+	{
 		dst = copy_string_to_dst(dst, var_value);
+		if (**src && !ft_isspace(**src) && **src != '$')
+			*dst++ = ' ';
+	}
 	free(var_name);
+	return (dst);
+}
+
+char	*handle_special_chars(char **src, char *dst)
+{
+	if (**src == '?')
+		(*src)++;
+	else if (ft_isdigit(**src))
+		(*src)++;
+	else
+		*dst++ = '$';
 	return (dst);
 }
 
 char	*expand_dollar(char **src, char *dst, t_shell *shell)
 {
 	(*src)++;
-	if (!**src)
+	if (!**src || ft_isspace(**src))
 		*dst++ = '$';
 	else if (**src == '?')
 		dst = handle_exit_status(src, dst, shell);
 	else if (ft_isalpha(**src) || **src == '_')
 		dst = handle_variable(src, dst, shell);
 	else if (ft_isdigit(**src))
+	{
 		(*src)++;
+		return (dst);
+	}
+	else if (**src == '$' || **src == '\'' || **src == '\"')
+		return (dst);
 	else
 		*dst++ = '$';
 	return (dst);
