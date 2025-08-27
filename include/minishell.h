@@ -31,7 +31,7 @@
 # include <stdbool.h>
 # include <errno.h>
 # include <stdarg.h>
-# include "../libft/libft/libft.h"
+# include "../libft/include/ft_printf.h"
 
 # define SINGLE_QUOTE_START '\001'
 # define SINGLE_QUOTE_END '\002'
@@ -277,4 +277,26 @@ int			handle_quote_extraction(const char *s, int *i, char *result,
 				int *res_len);
 int			builtin_exit(char **args, t_shell *shell);
 
+t_token *tokenize(const char *input, t_shell *shell);
+t_token *handle_empty_expansions(t_token *tokens);
+
+
+char *get_env_value(t_env_list *env_list, const char *key);
+void set_env_value(t_env_list *env_list, const char *key, const char *value);
+
+
+int execute_with_redirections(t_cmd *cmd, t_shell *shell);
+int handle_redirections_in_order(t_cmd *cmd);
+
+
+int process_input_redir(t_redir *redir, int *fd);
+int process_output_redir(t_redir *redir, int *fd);
+int apply_input_fd(int fd);
+int validate_redir_list(t_redir *redirs);
+
+void free_string_array(char **array);
+
+t_token	*handle_empty_expansions(t_token *tokens);
+t_token	*create_token(char **elements, t_shell *shell);
+t_token	*assign_token_types(t_token *tokens);
 #endif

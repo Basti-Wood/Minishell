@@ -1,28 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pwd.c                                              :+:      :+:    :+:   */
+/*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/28 16:02:58 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/25 20:04:40 by seftekha         ###   ########.fr       */
+/*   Created: 2025/07/28 16:05:32 by seftekha          #+#    #+#             */
+/*   Updated: 2025/07/28 16:05:33 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../include/minishell.h"
+#include "../include/minishell.h"
 
-int	builtin_pwd(void)
+int main(int argc, char **argv, char **env)
 {
-	char	*pwd;
-
-	pwd = getcwd(NULL, 0);
-	if (!pwd)
-	{
-		perror("pwd");
-		return (1);
-	}
-	printf("%s\n", pwd);
-	free(pwd);
-	return (0);
+    (void)argc;
+    (void)argv;
+    
+    minishell(env);
+    return 0;
 }

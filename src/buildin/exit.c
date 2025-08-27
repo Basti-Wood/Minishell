@@ -46,14 +46,12 @@ int	builtin_exit(char **args, t_shell *shell)
 		exit(exit_code);
 	}
 	clean_arg = remove_quote_markers(args[1]);
-	if (!clean_arg)
-		exit(1);
 	if (!is_valid_number(clean_arg))
 	{
-		ft_fprintf_stderr("minishell: exit: %s: numeric argument required\n",
-			args[1]);
+		ft_fprintf_stderr
+			("minishell: exit: %s: numeric argument required\n", args[1]);
 		free(clean_arg);
-		exit(2);
+		exit(255);
 	}
 	if (args[2])
 	{

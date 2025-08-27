@@ -9,7 +9,7 @@
 /*   Updated: 2025/08/08 17:41:43 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
-
+/*
 #include "../../include/minishell.h"
 
 static char	*allocate_result_buffer(char *str)
@@ -60,4 +60,4 @@ char	*expand_variables(char *str, t_shell *shell)
 	}
 	*dst = '\0';
 	return (result);
-}
+}*/
