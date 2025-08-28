@@ -31,9 +31,9 @@ static int	fork_and_execute_children(t_fork_data *data)
 
 int	execute_pipeline(t_cmd *cmds, t_shell *shell)
 {
-	int			**pipes;
+	int		**pipes;
 	pid_t		*pids;
-	int			cmd_count;
+	int		cmd_count;
 	t_fork_data	fork_data;
 
 	cmd_count = count_commands(cmds);
@@ -48,6 +48,7 @@ int	execute_pipeline(t_cmd *cmds, t_shell *shell)
 	fork_data.shell = shell;
 	if (fork_and_execute_children(&fork_data))
 		return (1);
+	close_all_pipes(pipes, cmd_count);
 	wait_for_children(pids, cmd_count, shell);
 	cleanup_resources(pipes, pids, cmd_count);
 	return (shell->exit_status);
