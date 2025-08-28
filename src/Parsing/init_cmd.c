@@ -1,20 +1,8 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   init_cmd.c                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/28 10:00:00 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/28 16:42:52 by seftekha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../../include/minishell.h"
 
-t_cmd	*init_new_cmd(void)
+t_cmd *init_new_cmd(void)
 {
-	t_cmd	*cmd;
+	t_cmd *cmd;
 
 	cmd = (t_cmd *)malloc(sizeof(t_cmd));
 	if (!cmd)

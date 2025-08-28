@@ -27,7 +27,9 @@ int	handle_quote_extraction(const char *s, int *i, char *result, int *res_len)
 		quote = s[(*i)++];
 		add_quote_markers(quote, result, res_len, 0);
 		while (s[*i] && s[*i] != quote)
+		{
 			result[(*res_len)++] = s[(*i)++];
+		}
 		if (s[*i] == quote)
 		{
 			(*i)++;

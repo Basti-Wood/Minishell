@@ -1,18 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   cd.c                                               :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/28 16:02:09 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/25 19:32:47 by seftekha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../../include/minishell.h"
 
-static int	validate_args(char **args)
+static int validate_args(char **args)
 {
 	if (args[1] && args[2])
 	{
@@ -22,16 +10,16 @@ static int	validate_args(char **args)
 	return (0);
 }
 
-static char	*get_target_path(char **args, t_env_list *env_list)
+static char *get_target_path(char **args, t_env_list *env_list)
 {
-	char	*home;
+	char *home;
 
 	if (!args[1])
 	{
 		home = get_env_value(env_list, "HOME");
 		if (!home)
 		{
-			ft_fprintf_stderr("cd: HOME not set\n");
+			ft_fprintf_stderr("minishell: cd: HOME not set\n");
 			return (NULL);
 		}
 		return (home);
@@ -39,7 +27,8 @@ static char	*get_target_path(char **args, t_env_list *env_list)
 	return (args[1]);
 }
 
-static void	update_pwd_vars(t_env_list *env_list, char *old_pwd, char *new_pwd)
+static void update_pwd_vars(t_env_list *env_list,
+	char *old_pwd, char *new_pwd)
 {
 	if (old_pwd)
 		set_env_value(env_list, "OLDPWD", old_pwd);
@@ -50,11 +39,11 @@ static void	update_pwd_vars(t_env_list *env_list, char *old_pwd, char *new_pwd)
 	}
 }
 
-int	builtin_cd(char **args, t_env_list *env_list)
+int builtin_cd(char **args, t_env_list *env_list)
 {
-	char	*path;
-	char	*old_pwd;
-	char	*new_pwd;
+	char *path;
+	char *old_pwd;
+	char *new_pwd;
 
 	if (validate_args(args))
 		return (1);
@@ -64,7 +53,7 @@ int	builtin_cd(char **args, t_env_list *env_list)
 		return (1);
 	if (chdir(path) != 0)
 	{
-		perror("cd");
+		perror("minishell: cd");
 		return (1);
 	}
 	new_pwd = getcwd(NULL, 0);

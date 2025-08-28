@@ -14,15 +14,38 @@
 
 void	execute_process(char *executable, t_cmd *cmd, char **env_array)
 {
+	struct stat st;
+
+	if (stat(executable, &st) == 0 && S_ISDIR(st.st_mode))
+	{
+		ft_fprintf_stderr("minishell: %s: Is a directory\n", executable);
+		cleanup_process_resources(executable, env_array);
+		exit(126);
+	}
 	if (execve(executable, cmd->argv, env_array) == -1)
 	{
 		if (errno == ENOEXEC)
 		{
 			try_shell_script(executable, cmd, env_array);
+			ft_fprintf_stderr("minishell: %s: Exec format error\n", executable);
+			cleanup_process_resources(executable, env_array);
+			exit(0);
+		}
+		else if (errno == EISDIR)
+		{
+			ft_fprintf_stderr("minishell: %s: Is a directory\n", executable);
+			cleanup_process_resources(executable, env_array);
+			exit(126);
+		}
+		else if (errno == EACCES)
+		{
+			ft_fprintf_stderr("minishell: %s: Permission denied\n", executable);
+			cleanup_process_resources(executable, env_array);
+			exit(126);
 		}
 		else
 		{
-			perror("execve");
+			ft_fprintf_stderr("minishell: %s: %s\n", executable, strerror(errno));
 			cleanup_process_resources(executable, env_array);
 			exit(127);
 		}

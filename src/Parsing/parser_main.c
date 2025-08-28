@@ -46,7 +46,7 @@ t_cmd	*process_command_tokens(t_token **tokens, t_shell *shell)
 		}
 		*tokens = (*tokens)->next;
 	}
-	if (argc == 0 && !new_cmd->redirs)
+	if (argc == 0 && !new_cmd->redirs && !new_cmd->infiles && !new_cmd->outfiles)
 	{
 		free_cmds(new_cmd);
 		return (NULL);

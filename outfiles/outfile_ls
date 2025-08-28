@@ -1,0 +1,11 @@
+Makefile
+build_errors.txt
+include
+libft
+mini_test_commands.txt
+minishell
+minishell_tester
+obj
+outfiles
+removetests.sh
+src

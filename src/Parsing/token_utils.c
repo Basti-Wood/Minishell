@@ -12,41 +12,63 @@
 
 #include "../../include/minishell.h"
 
-int	is_redirection_token(t_token_type type)
+void	free_token(t_token *token)
 {
-	return (type == TRUNC || type == APPEND || type == INPUT || type == HEREDOC);
+	if (!token)
+		return ;
+	if (token->str)
+		free(token->str);
+	free(token);
 }
 
-int	handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell)
+void	free_token_list(t_token *head)
 {
-	t_token		*current;
-	t_redir		*redir;
-	t_token		*next;
+	t_token	*current;
+	t_token	*next;
 
-	(void)shell;  // Prevent unused parameter warning
-	current = *tokens;
-	if (!current || !current->next)
-		return (1);
-	next = current->next;
-
-	if (current->type == TRUNC)
-		redir = create_redir(next->str, REDIR_OUTPUT);
-	else if (current->type == APPEND)
-		redir = create_redir(next->str, REDIR_APPEND);
-	else if (current->type == INPUT)
-		redir = create_redir(next->str, REDIR_INPUT);
-	else if (current->type == HEREDOC)
+	current = head;
+	while (current)
 	{
-		redir = create_redir(next->str, REDIR_HEREDOC);
-		cmd->heredoc = 1;
+		next = current->next;
+		free_token(current);
+		current = next;
 	}
-	else
-		return (1);
-
-	if (!redir)
-		return (1);
-
-	add_redirection(cmd, redir);
-	*tokens = next->next;
-	return (0);
 }
+
+t_token	*create_new_token(char *str, t_token_type type)
+{
+	t_token	*new_token;
+
+	new_token = (t_token *)malloc(sizeof(t_token));
+	if (!new_token)
+		return (NULL);
+	new_token->str = str ? ft_strdup(str) : NULL;
+	if (str && !new_token->str)
+	{
+		free(new_token);
+		return (NULL);
+	}
+	new_token->type = type;
+	new_token->next = NULL;
+	new_token->prev = NULL;
+	return (new_token);
+}
+
+void	append_token(t_token **head, t_token *new_token)
+{
+	t_token	*current;
+
+	if (!head || !new_token)
+		return ;
+	if (!*head)
+	{
+		*head = new_token;
+		return ;
+	}
+	current = *head;
+	while (current->next)
+		current = current->next;
+	current->next = new_token;
+	new_token->prev = current;
+}
+

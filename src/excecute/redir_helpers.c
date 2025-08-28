@@ -15,9 +15,15 @@
 int	process_input_redir(t_redir *redir, int *fd)
 {
 	if (!redir || !redir->filename)
-		return (-1);
+		return (0);
 	if (*fd != -1)
 		close(*fd);
+	if (access(redir->filename, F_OK) == -1)
+	{
+		ft_fprintf_stderr("minishell: %s: No such file or directory\n",
+			redir->filename);
+		return (-1);
+	}
 	*fd = open(redir->filename, O_RDONLY);
 	if (*fd == -1)
 	{
