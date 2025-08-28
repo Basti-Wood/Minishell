@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   expension_main.c                                   :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/08 17:41:14 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/27 16:00:00 by seftekha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../../include/minishell.h"
 
 static char	*allocate_result_buffer(char *str)
@@ -25,23 +13,26 @@ static char	*allocate_result_buffer(char *str)
 	return (result);
 }
 
-static int	handle_single_quote(char **src, int *in_single, int in_double)
+static int	handle_quote_marker(char c, int *in_single, int *in_double)
 {
-	if (!in_double)
+	if (c == '\001')
 	{
-		*in_single = !*in_single;
-		(*src)++;
+		*in_single = 1;
 		return (1);
 	}
-	return (0);
-}
-
-static int	handle_double_quote(char **src, int in_single, int *in_double)
-{
-	if (!in_single)
+	else if (c == '\002')
 	{
-		*in_double = !*in_double;
-		(*src)++;
+		*in_single = 0;
+		return (1);
+	}
+	else if (c == '\003')
+	{
+		*in_double = 1;
+		return (1);
+	}
+	else if (c == '\004')
+	{
+		*in_double = 0;
 		return (1);
 	}
 	return (0);
@@ -51,7 +42,7 @@ void	handle_quote_markers(char c, int *in_single_quotes)
 {
 	if (c == '\001')
 		*in_single_quotes = 1;
-	else if (c == '\003')
+	else if (c == '\002')
 		*in_single_quotes = 0;
 }
 
@@ -72,10 +63,11 @@ char	*expand_variables(char *str, t_shell *shell)
 	in_double = 0;
 	while (*src)
 	{
-		if (*src == '\'' && handle_single_quote(&src, &in_single, in_double))
-			continue ;
-		if (*src == '\"' && handle_double_quote(&src, in_single, &in_double))
-			continue ;
+		if (handle_quote_marker(*src, &in_single, &in_double))
+		{
+			*dst++ = *src++;
+			continue;
+		}
 		if (*src == '$' && !in_single)
 			dst = expand_dollar(&src, dst, shell);
 		else

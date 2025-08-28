@@ -1,57 +1,44 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   parser_args.c                                      :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/18 13:31:52 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/25 19:43:03 by seftekha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../../include/minishell.h"
+
+static char	**realloc_argv(char **argv, int old_size, int new_size)
+{
+	char	**new_argv;
+	int		i;
+
+	new_argv = malloc(sizeof(char *) * (new_size + 1));
+	if (!new_argv)
+		return (NULL);
+	i = 0;
+	while (i < old_size && argv[i])
+	{
+		new_argv[i] = argv[i];
+		i++;
+	}
+	while (i <= new_size)
+		new_argv[i++] = NULL;
+	if (argv)
+		free(argv);
+	return (new_argv);
+}
 
 int	add_argument(t_cmd *cmd, char *arg, int *argc)
 {
-	cmd->argv = realloc(cmd->argv, (*argc + 2) * sizeof(char *));
-	if (!cmd->argv)
+	char	**new_argv;
+	int		new_size;
+
+	if (!cmd || !arg || !argc)
 		return (0);
-	cmd->argv[*argc] = remove_quote_markers(arg);
+	new_size = *argc + 1;
+	new_argv = realloc_argv(cmd->argv, *argc, new_size);
+	if (!new_argv)
+		return (0);
+	new_argv[*argc] = ft_strdup(arg);
+	if (!new_argv[*argc])
+	{
+		free(new_argv);
+		return (0);
+	}
+	cmd->argv = new_argv;
 	(*argc)++;
-	cmd->argv[*argc] = NULL;
 	return (1);
-}
-
-int	is_redirection_token(t_token_type type)
-{
-	if (type == INPUT)
-		return (1);
-	if (type == TRUNC)
-		return (1);
-	if (type == APPEND)
-		return (1);
-	if (type == HEREDOC)
-		return (1);
-	return (0);
-}
-
-static void	handle_syntax_error(t_shell *shell, char *token_str)
-{
-	ft_fprintf_stderr("minishell: syntax error near unexpected token `%s'\n",
-		token_str);
-	shell->exit_status = 258;
-}
-
-int	handle_redirection(t_token **tokens, t_cmd *cmd, t_shell *shell)
-{
-	if ((*tokens)->type == INPUT && (*tokens)->next)
-		return (handle_input_redir(tokens, cmd));
-	if (((*tokens)->type == TRUNC || (*tokens)->type == APPEND)
-		&& (*tokens)->next)
-		return (handle_output_redir(tokens, cmd));
-	if ((*tokens)->type == HEREDOC && (*tokens)->next)
-		return (handle_heredoc_redir(tokens, cmd, shell));
-	handle_syntax_error(shell, (*tokens)->str);
-	return (0);
 }

@@ -1,25 +1,22 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   parser_main.c                                      :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/18 13:32:15 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/26 13:56:32 by seftekha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../../include/minishell.h"
 
 int	process_token(t_token **tokens, t_cmd *cmd, int *argc, t_shell *shell)
 {
+	char	*cleaned_str;
+
 	if (!tokens || !*tokens || !cmd || !argc)
 		return (0);
 	if ((*tokens)->type == CMD || (*tokens)->type == ARG)
 	{
-		if (!add_argument(cmd, (*tokens)->str, argc))
+		cleaned_str = remove_quote_markers((*tokens)->str);
+		if (!cleaned_str)
 			return (0);
+		if (!add_argument(cmd, cleaned_str, argc))
+		{
+			free(cleaned_str);
+			return (0);
+		}
+		free(cleaned_str);
 	}
 	else if (is_redirection_token((*tokens)->type))
 	{

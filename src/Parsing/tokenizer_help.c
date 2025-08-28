@@ -1,31 +1,21 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   tokenization_helper.c                              :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/27 16:00:00 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/27 16:00:00 by seftekha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../../include/minishell.h"
 
 static t_token	*create_single_token(char *element,
 				t_shell *shell, t_token *prev)
 {
 	t_token	*new_token;
+	char	*expanded;
 
 	new_token = malloc(sizeof(t_token));
 	if (!new_token)
 		return (NULL);
-	new_token->str = expand_variables(element, shell);
-	if (!new_token->str)
+	expanded = expand_variables(element, shell);
+	if (!expanded)
 	{
 		free(new_token);
 		return (NULL);
 	}
+	new_token->str = expanded;
 	new_token->type = EMPTY;
 	new_token->next = NULL;
 	new_token->prev = prev;
