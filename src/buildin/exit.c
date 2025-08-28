@@ -42,7 +42,7 @@ static int	handle_exit_args(char **args, char **clean_arg, int *exit_code)
 		ft_fprintf_stderr
 			("minishell: exit: %s: numeric argument required\n", args[1]);
 		free(*clean_arg);
-		exit(255);
+		exit(2);
 	}
 	if (args[2])
 	{
