@@ -5,12 +5,58 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/27 16:00:00 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/27 16:00:00 by seftekha         ###   ########.fr       */
+/*   Created: 2025/08/28 10:00:00 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/28 16:42:52 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+
+void	add_to_ordered_redirs(t_cmd *cmd, t_redir *redir)
+{
+	t_redir	*current;
+
+	if (!cmd->redirs)
+	{
+		cmd->redirs = redir;
+		return ;
+	}
+	current = cmd->redirs;
+	while (current->next)
+		current = current->next;
+	current->next = redir;
+}
+
+void	add_redirection(t_cmd *cmd, t_redir *redir)
+{
+	if (!redir)
+		return ;
+	if (redir->type == REDIR_INPUT || redir->type == REDIR_HEREDOC)
+	{
+		if (!cmd->infiles)
+			cmd->infiles = redir;
+		else
+		{
+			t_redir *current = cmd->infiles;
+			while (current->next)
+				current = current->next;
+			current->next = redir;
+		}
+	}
+	else
+	{
+		if (!cmd->outfiles)
+			cmd->outfiles = redir;
+		else
+		{
+			t_redir *current = cmd->outfiles;
+			while (current->next)
+				current = current->next;
+			current->next = redir;
+		}
+	}
+	add_to_ordered_redirs(cmd, redir);
+}
 
 int	validate_input_redir(t_redir *redir)
 {

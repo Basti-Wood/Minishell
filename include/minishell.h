@@ -106,6 +106,8 @@ typedef struct s_cmd
 	struct s_cmd				*next;
 }								t_cmd;
 
+char	*path_search(const char *cmd, char **envp);
+
 typedef struct s_shell
 {
 	t_env_list					env_list;
@@ -338,5 +340,6 @@ void							handle_quote_markers(char c, int *in_single_quotes);
 int								should_copy_char(char c);
 int								validate_input_files_before_output(t_cmd *cmd);
 int								validate_output_file(const char *filename);
+int								apply_redirections(t_cmd *cmd);
 
 #endif

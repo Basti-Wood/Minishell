@@ -46,15 +46,65 @@ void	restore_file_descriptors(int saved_stdin, int saved_stdout)
 
 int	execute_command(t_cmd *cmd, t_shell *shell)
 {
+	int saved_stdin;
+	int saved_stdout;
+	int result;
+
+	printf("[DEBUG] execute_command: Entered\n");
 	if (!cmd)
+	{
+		printf("[DEBUG] execute_command: Null command\n");
 		return (0);
+	}
+	printf("[DEBUG] execute_command: Command %s\n", cmd->argv ? cmd->argv[0] : "NULL");
+
 	if (cmd->argv && cmd->argv[0] && cmd->argv[0][0] == '\0')
 	{
+		printf("[DEBUG] execute_command: Empty command, shifting arguments\n");
 		shift_argv(&cmd->argv);
 		if (!cmd->argv || !cmd->argv[0])
+		{
+			printf("[DEBUG] execute_command: No arguments after shift\n");
 			return (0);
+		}
 	}
-	return (execute_with_redirections(cmd, shell));
+
+	saved_stdin = dup(STDIN_FILENO);
+	saved_stdout = dup(STDOUT_FILENO);
+	if (saved_stdin == -1 || saved_stdout == -1)
+	{
+		perror("[DEBUG] execute_command: Failed to save file descriptors");
+		return (1);
+	}
+
+	if (handle_redirections_in_order(cmd) != 0)
+	{
+		printf("[DEBUG] execute_command: Failed to handle redirections\n");
+		close(saved_stdin);
+		close(saved_stdout);
+		return (1);
+	}
+
+	printf("[DEBUG] execute_command: Redirections set up, executing command '%s'\n", cmd->argv[0]);
+	if (is_builtin(cmd->argv[0]))
+	{
+		printf("[DEBUG] execute_command: Executing builtin '%s'\n", cmd->argv[0]);
+		result = execute_builtin(cmd, shell);
+	}
+	else
+	{
+		printf("[DEBUG] execute_command: Executing external command '%s'\n", cmd->argv[0]);
+		result = execute_external_command(cmd, shell);
+	}
+	printf("[DEBUG] execute_command: Command finished with status %d\n", result);
+
+	printf("[DEBUG] execute_command: Restoring file descriptors\n");
+	dup2(saved_stdin, STDIN_FILENO);
+	dup2(saved_stdout, STDOUT_FILENO);
+	close(saved_stdin);
+	close(saved_stdout);
+
+	return result;
 }
 
 int	handle_redirections_in_order(t_cmd *cmd)

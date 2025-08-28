@@ -65,3 +65,34 @@ char	*build_full_path(char *dir, char *cmd)
 	ft_strcat(full_path, cmd);
 	return (full_path);
 }
+
+char	*search_in_paths(char *cmd, char *path_env)
+{
+	char	**paths;
+	char	*full_path;
+	int		i;
+	struct stat	st;
+
+	if (!cmd || !path_env)
+		return (NULL);
+	paths = ft_split(path_env, ':');
+	if (!paths)
+		return (NULL);
+	i = 0;
+	while (paths[i])
+	{
+		full_path = build_full_path(paths[i], cmd);
+		if (full_path && access(full_path, F_OK) == 0)
+		{
+			if (stat(full_path, &st) == 0 && !S_ISDIR(st.st_mode))
+			{
+				free_paths_array(paths);
+				return (full_path);
+			}
+			free(full_path);
+		}
+		i++;
+	}
+	free_paths_array(paths);
+	return (NULL);
+}

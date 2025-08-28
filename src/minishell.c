@@ -59,10 +59,12 @@ void minishell(char **env)
         if (*line)
             add_history(line);
 
+        printf("[DEBUG] Processing command: '%s'\n", line);
         shell.input = line;
         tokens = tokenize(shell.input, &shell);
         if (!tokens)
         {
+            printf("[DEBUG] Tokenization failed\n");
 			free(line);
 			continue;
 		}
@@ -79,14 +81,40 @@ void minishell(char **env)
 			continue;
 		}
 		cmds = parse_tokens(tokens, &shell);
+		if (!cmds)
+            printf("[DEBUG] Command parsing failed\n");
 		free_tokens(tokens);
 
         if (cmds)
         {
+            printf("[DEBUG] Command structure:\n");
+            t_cmd *curr = cmds;
+            while (curr)
+            {
+                printf("[DEBUG] Command: '%s'\n", curr->argv ? curr->argv[0] : "NULL");
+                if (curr->argv)
+                {
+                    int i = 1;
+                    while (curr->argv[i])
+                    {
+                        printf("[DEBUG]   Arg[%d]: '%s'\n", i, curr->argv[i]);
+                        i++;
+                    }
+                }
+                curr = curr->next;
+            }
+
             if (has_pipe(cmds))
+            {
+                printf("[DEBUG] Executing pipeline\n");
                 shell.exit_status = execute_pipeline(cmds, &shell);
+            }
             else
+            {
+                printf("[DEBUG] Executing single command\n");
                 shell.exit_status = execute_command(cmds, &shell);
+            }
+            printf("[DEBUG] Command exit status: %d\n", shell.exit_status);
 			free_cmds(cmds);
         }
         free(line);

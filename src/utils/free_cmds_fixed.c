@@ -20,19 +20,11 @@ void	free_cmds(t_cmd *cmds)
 	{
 		tmp = cmds;
 		cmds = cmds->next;
-		
-		// Free argv array
 		if (tmp->argv)
 			free_argv(tmp->argv);
-		
-		// Free only the main redirs list (no more infiles/outfiles)
 		free_redirs(tmp->redirs);
-		
-		// Close heredoc fd if still open
 		if (tmp->heredoc > 0)
 			close(tmp->heredoc);
-		
-		// Free the cmd structure itself
 		free(tmp);
 	}
 }
