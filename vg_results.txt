@@ -1,0 +1,53 @@
+===== TEST 1: echo hello world =====
+===== TEST 2: echo "hello world" =====
+===== TEST 3: echo 'hello world' =====
+===== TEST 4: echo hello'world' =====
+===== TEST 5: echo hello""world =====
+===== TEST 6: echo '' =====
+===== TEST 7: echo "$PWD" =====
+===== TEST 8: echo '$PWD' =====
+===== TEST 9: echo "aspas ->'" =====
+===== TEST 10: echo "aspas -> ' " =====
+===== TEST 11: echo 'aspas ->"' =====
+===== TEST 12: echo 'aspas -> " ' =====
+===== TEST 13: echo "> >> < * ? [ ] | ; [ ] || && ( ) & # $ \ <<" =====
+===== TEST 14: echo '> >> < * ? [ ] | ; [ ] || && ( ) & # $ \ <<' =====
+===== TEST 15: echo "exit_code ->$? user ->$USER home -> $HOME" =====
+===== TEST 16: echo 'exit_code ->$? user ->$USER home -> $HOME' =====
+===== TEST 17: echo "$" =====
+===== TEST 18: echo '$' =====
+===== TEST 19: echo $ =====
+===== TEST 20: echo $? =====
+===== TEST 21: echo $?HELLO =====
+===== TEST 22: pwd =====
+===== TEST 23: pwd oi =====
+===== TEST 24: export hello =====
+===== TEST 25: export HELLO=123 =====
+===== TEST 26: export A- =====
+===== TEST 27: export HELLO=123 A =====
+===== TEST 28: export HELLO="123 A-" =====
+===== TEST 29: export hello world =====
+===== TEST 30: export HELLO-=123 =====
+===== TEST 31: export = =====
+===== TEST 32: export 123 =====
+===== TEST 33: unset =====
+===== TEST 34: unset HELLO =====
+===== TEST 35: unset HELLO1 HELLO2 =====
+===== TEST 36: unset HOME =====
+===== TEST 37: unset PATH =====
+===== TEST 38: unset SHELL =====
+===== TEST 39: cd $PWD =====
+===== TEST 40: cd $PWD hi  =====
+===== TEST 41: cd 123123 =====
+===== TEST 42: exit 123 =====
+===== TEST 43: exit 298 =====
+===== TEST 44: exit +100 =====
+===== TEST 45: exit "+100" =====
+===== TEST 46: exit +"100" =====
+===== TEST 47: exit -100 =====
+===== TEST 48: exit "-100" =====
+===== TEST 49: exit -"100" =====
+===== TEST 50: exit hello =====
+===== TEST 51: exit 42 world =====
+===== TEST 52:  =====
+Done

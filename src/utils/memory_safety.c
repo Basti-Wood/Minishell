@@ -43,10 +43,7 @@ void	*safe_malloc(size_t size)
 		return (NULL);
 	ptr = malloc(size);
 	if (!ptr)
-	{
-		ft_fprintf_stderr("minishell: memory allocation failed\n");
 		return (NULL);
-	}
 	ft_memset(ptr, 0, size);
 	return (ptr);
 }
@@ -63,5 +60,5 @@ void	safe_dup2(int oldfd, int newfd)
 	if (oldfd < 0 || newfd < 0)
 		return ;
 	if (dup2(oldfd, newfd) == -1)
-		perror("dup2");
+		ft_fprintf_stderr("minishell: dup2 failed\n");
 }

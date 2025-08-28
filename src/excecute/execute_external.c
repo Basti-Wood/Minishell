@@ -21,13 +21,13 @@ int	execute_external(t_cmd *cmd, t_shell *shell)
 	t_env_node *current;
 	int env_count;
 
-	printf("[DEBUG] execute_external: Entered\n");
+	/* printf("[DEBUG] execute_external: Entered\n"); */
 	if (!cmd || !cmd->argv || !cmd->argv[0])
 	{
-		printf("[DEBUG] execute_external: Invalid command structure\n");
+		/* printf("[DEBUG] execute_external: Invalid command structure\n"); */
 		return (1);
 	}
-	printf("[DEBUG] execute_external: Executing '%s'\n", cmd->argv[0]);
+	/* printf("[DEBUG] execute_external: Executing '%s'\n", cmd->argv[0]); */
 
 	// Convert env_list to array
 	env_count = shell->env_list.size;
@@ -58,13 +58,13 @@ int	execute_external(t_cmd *cmd, t_shell *shell)
 	}
 	env_array[env_count] = NULL;
 
-	printf("[DEBUG] execute_external: Searching for command in PATH\n");
+	/* printf("[DEBUG] execute_external: Searching for command in PATH\n"); */
 	path = path_search(cmd->argv[0], env_array);
-	printf("[DEBUG] execute_external: path_search returned: %s\n", path ? path : "NULL");
+	/* printf("[DEBUG] execute_external: path_search returned: %s\n", path ? path : "NULL"); */
 	
 	if (!path)
 	{
-		printf("[DEBUG] execute_external: Command not found\n");
+		/* printf("[DEBUG] execute_external: Command not found\n"); */
 		ft_fprintf(STDERR_FILENO, "minishell: %s: command not found\n",
 			cmd->argv[0]);
 		// Free the environment array and its strings
@@ -74,7 +74,7 @@ int	execute_external(t_cmd *cmd, t_shell *shell)
 		return (127);
 	}
 
-	printf("[DEBUG] execute_external: Attempting to execute at path: %s\n", path);
+	/* printf("[DEBUG] execute_external: Attempting to execute at path: %s\n", path); */
 	status = execve(path, cmd->argv, env_array);
 	// No need to free after successful execve since process is replaced
 	// Only free if execve fails
@@ -96,13 +96,13 @@ int	execute_external_command(t_cmd *cmd, t_shell *shell)
 	pid_t	pid;
 	int		status;
 
-	printf("[DEBUG] execute_external_command: Entered\n");
+	/* printf("[DEBUG] execute_external_command: Entered\n"); */
 	if (!cmd || !cmd->argv || !cmd->argv[0])
 	{
-		printf("[DEBUG] execute_external_command: Invalid command structure\n");
+		/* printf("[DEBUG] execute_external_command: Invalid command structure\n"); */
 		return (1);
 	}
-	printf("[DEBUG] execute_external_command: Forking to execute '%s'\n", cmd->argv[0]);
+	/* printf("[DEBUG] execute_external_command: Forking to execute '%s'\n", cmd->argv[0]); */
 
 	pid = fork();
 	if (pid == -1)
@@ -115,13 +115,13 @@ int	execute_external_command(t_cmd *cmd, t_shell *shell)
 		status = execute_external(cmd, shell);
 		exit(status);
 	}
-	printf("[DEBUG] execute_external_command: Waiting for child process\n");
+	/* printf("[DEBUG] execute_external_command: Waiting for child process\n"); */
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status))
 	{
-		printf("[DEBUG] execute_external_command: Child exited with status %d\n", WEXITSTATUS(status));
+		/* printf("[DEBUG] execute_external_command: Child exited with status %d\n", WEXITSTATUS(status)); */
 		return (WEXITSTATUS(status));
 	}
-	printf("[DEBUG] execute_external_command: Child terminated abnormally\n");
+	/* printf("[DEBUG] execute_external_command: Child terminated abnormally\n"); */
 	return (1);
 }

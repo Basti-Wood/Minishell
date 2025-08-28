@@ -21,7 +21,11 @@ void	free_argv(char **argv)
 	i = 0;
 	while (argv[i])
 	{
-		free(argv[i]);
+		if (argv[i])
+		{
+			free(argv[i]);
+			argv[i] = NULL;
+		}
 		i++;
 	}
 	free(argv);

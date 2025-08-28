@@ -15,16 +15,28 @@
 void	free_cmds(t_cmd *cmds)
 {
 	t_cmd	*tmp;
+	t_cmd	*next;
 
-	while (cmds)
+	tmp = cmds;
+	while (tmp)
 	{
-		tmp = cmds;
-		cmds = cmds->next;
+		next = tmp->next;
 		if (tmp->argv)
+		{
 			free_argv(tmp->argv);
-		free_redirs(tmp->redirs);
+			tmp->argv = NULL;
+		}
+		if (tmp->redirs)
+		{
+			free_redirs(tmp->redirs);
+			tmp->redirs = NULL;
+		}
 		if (tmp->heredoc > 0)
+		{
 			close(tmp->heredoc);
+			tmp->heredoc = -1;
+		}
 		free(tmp);
+		tmp = next;
 	}
 }
