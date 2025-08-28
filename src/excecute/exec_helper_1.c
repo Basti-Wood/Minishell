@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   execute.c                                          :+:      :+:    :+:   */
+/*   exec_helper_1.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/28 16:04:06 by seftekha          #+#    #+#             */
-/*   Updated: 2025/07/28 16:04:07 by seftekha         ###   ########.fr       */
+/*   Updated: 2025/08/28 17:18:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,11 +95,9 @@ int	handle_single_redirection(t_redir *redir)
 	if (redir->type == REDIR_INPUT)
 		return (handle_input_redirection(redir));
 	else if (redir->type == REDIR_OUTPUT)
-		return (apply_output_redirection(redir,
-				O_WRONLY | O_CREAT | O_TRUNC));
+		return (apply_output_redirection(redir, O_WRONLY | O_CREAT | O_TRUNC));
 	else if (redir->type == REDIR_APPEND)
-		return (apply_output_redirection(redir,
-				O_WRONLY | O_CREAT | O_APPEND));
+		return (apply_output_redirection(redir, O_WRONLY | O_CREAT | O_APPEND));
 	else if (redir->type == REDIR_HEREDOC)
 		return (0);
 	return (0);
