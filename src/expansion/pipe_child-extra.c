@@ -35,11 +35,10 @@ void	setup_child_process(t_child_data *data)
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
 	setup_child_pipes(data->i, data->cmd_count, data->pipes);
-	redir_status = handle_redirections_in_order(data->current);
+	redir_status = handle_redirections(data->current);
+	if (redir_status != 0)
+		exit(1);
 	if (data->current->argv && data->current->argv[0])
 		execute_child_command(data->current, data->shell);
-	else if (redir_status != 0)
-		exit(1);
-	else
-		exit(0);
+	exit(0);
 }

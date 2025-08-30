@@ -16,30 +16,22 @@ void	shift_argv(char ***argv)
 {
 	int	i;
 	int	j;
-	char **args;
+	char	**args;
 
 	if (!argv || !*argv)
-		return;
-
+		return ;
 	args = *argv;
+	if (!args[0])
+		return ;
 	i = 0;
-	/* Skip empty strings at the start without freeing them here — ownership
-	   of the strings belongs to the caller and freeing here can cause double
-	   free / invalid pointer errors. */
-	while (args[i] && args[i][0] == '\0')
-		i++;
-
-	if (!args[i])
-	{
-		args[0] = NULL;
-		return;
-	}
-
 	j = 0;
 	while (args[i])
 	{
-		args[j] = args[i];
-		j++;
+		if (args[i][0] != '\0')
+		{
+			args[j] = args[i];
+			j++;
+		}
 		i++;
 	}
 	args[j] = NULL;

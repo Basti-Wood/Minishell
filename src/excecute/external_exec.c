@@ -16,40 +16,43 @@ void	execute_process(char *executable, t_cmd *cmd, char **env_array)
 {
 	struct stat st;
 
-	if (stat(executable, &st) == 0 && S_ISDIR(st.st_mode))
+	if (stat(executable, &st) == -1)
+	{
+		if (ft_strchr(cmd->argv[0], '/'))
+		{
+			if (errno == ENOENT)
+				ft_fprintf_stderr("minishell: %s: No such file or directory\n", 
+					executable);
+			else
+				ft_fprintf_stderr("minishell: %s: Permission denied\n", executable);
+			cleanup_process_resources(executable, env_array);
+			exit(127);
+		}
+		ft_fprintf_stderr("minishell: %s: command not found\n", executable);
+		cleanup_process_resources(executable, env_array);
+		exit(127);
+	}
+	if (S_ISDIR(st.st_mode))
 	{
 		ft_fprintf_stderr("minishell: %s: Is a directory\n", executable);
 		cleanup_process_resources(executable, env_array);
 		exit(126);
 	}
-	if (execve(executable, cmd->argv, env_array) == -1)
+	execve(executable, cmd->argv, env_array);
+	if (errno == ENOEXEC)
 	{
-		if (errno == ENOEXEC)
-		{
-			try_shell_script(executable, cmd, env_array);
-			ft_fprintf_stderr("minishell: %s: Exec format error\n", executable);
-			cleanup_process_resources(executable, env_array);
-			exit(0);
-		}
-		else if (errno == EISDIR)
-		{
-			ft_fprintf_stderr("minishell: %s: Is a directory\n", executable);
-			cleanup_process_resources(executable, env_array);
-			exit(126);
-		}
-		else if (errno == EACCES)
-		{
-			ft_fprintf_stderr("minishell: %s: Permission denied\n", executable);
-			cleanup_process_resources(executable, env_array);
-			exit(126);
-		}
-		else
-		{
-			ft_fprintf_stderr("minishell: %s: %s\n", executable, strerror(errno));
-			cleanup_process_resources(executable, env_array);
-			exit(127);
-		}
+		try_shell_script(executable, cmd, env_array);
+		exit(0);
 	}
+	else if (errno == EACCES)
+	{
+		ft_fprintf_stderr("minishell: %s: Permission denied\n", executable);
+		cleanup_process_resources(executable, env_array);
+		exit(126);
+	}
+	ft_fprintf_stderr("minishell: %s: command not found\n", executable);
+	cleanup_process_resources(executable, env_array);
+	exit(127);
 }
 
 void	cleanup_process_resources(char *executable, char **env_array)

@@ -21,7 +21,7 @@ int handle_input_redir(t_token **tokens, t_cmd *cmd)
 	*tokens = (*tokens)->next;
 	if (!*tokens || !(*tokens)->str)
 	{
-		ft_fprintf_stderr("minishell: syntax error near redirect\n");
+		ft_fprintf_stderr("minishell: syntax error near unexpected token `newline'\n");
 		return (0);
 	}
 	filename = remove_quote_markers((*tokens)->str);

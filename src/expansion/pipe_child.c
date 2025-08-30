@@ -25,6 +25,38 @@ static void	close_all_child_pipes(int **pipes, int cmd_count)
 	}
 }
 
+int has_input_redirect(t_cmd *cmd)
+{
+	t_redir *current;
+
+	if (!cmd || !cmd->redirs)
+		return (0);
+	current = cmd->redirs;
+	while (current)
+	{
+		if (current->type == REDIR_INPUT || current->type == REDIR_HEREDOC)
+			return (1);
+		current = current->next;
+	}
+	return (cmd->heredoc > 0);
+}
+
+int has_output_redirect(t_cmd *cmd)
+{
+	t_redir *current;
+
+	if (!cmd || !cmd->redirs)
+		return (0);
+	current = cmd->redirs;
+	while (current)
+	{
+		if (current->type == REDIR_OUTPUT || current->type == REDIR_APPEND)
+			return (1);
+		current = current->next;
+	}
+	return (0);
+}
+
 int	setup_child_pipes(int i, int cmd_count, int **pipes)
 {
 	if (i > 0)
@@ -39,6 +71,7 @@ void	execute_child_external(t_cmd *current, t_shell *shell)
 {
 	char	*executable;
 	char	**env_array;
+	struct stat	st;
 
 	executable = find_executable(current->argv[0], &shell->env_list);
 	if (!executable)
@@ -53,7 +86,19 @@ void	execute_child_external(t_cmd *current, t_shell *shell)
 		free(executable);
 		exit(1);
 	}
+	if (stat(executable, &st) == 0 && S_ISDIR(st.st_mode))
+	{
+		ft_fprintf_stderr("minishell: %s: Is a directory\n", executable);
+		free(executable);
+		free_string_array(env_array);
+		exit(126);
+	}
 	execve(executable, current->argv, env_array);
-	perror("execve");
-	exit(126);
+	if (errno == EACCES)
+	{
+		ft_fprintf_stderr("minishell: %s: Permission denied\n", executable);
+		exit(126);
+	}
+	ft_fprintf_stderr("minishell: %s: command not found\n", executable);
+	exit(127);
 }

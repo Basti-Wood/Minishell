@@ -83,15 +83,3 @@ int process_redir_with_validation(t_redir *redir)
 	}
 	return (0);
 }
-
-int get_argc(char **argv)
-{
-	int count;
-
-	count = 0;
-	if (!argv)
-		return (0);
-	while (argv[count])
-		count++;
-	return (count);
-}

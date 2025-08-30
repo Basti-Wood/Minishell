@@ -50,38 +50,47 @@ void free_env_array(char **env_array)
 
 int execute_external(t_cmd *cmd, t_shell *shell)
 {
+	pid_t pid;
+	int status;
 	char *path;
 	char **env_array;
-	int status;
 
 	if (!cmd || !cmd->argv || !cmd->argv[0])
 		return (1);
-	if (create_env_array(shell, &env_array) != 0)
+	pid = fork();
+	if (pid == -1)
 		return (1);
-	path = path_search(cmd->argv[0], env_array);
-	if (!path)
+	if (pid == 0)
 	{
-		ft_fprintf(STDERR_FILENO, "minishell: %s: command not found\n",
-			cmd->argv[0]);
-		free_env_array(env_array);
-		return (127);
-	}
-	status = execve(path, cmd->argv, env_array);
-	free_env_array(env_array);
-	free(path);
-	if (status == -1)
-	{
+		if (create_env_array(shell, &env_array) != 0)
+			exit(1);
+		path = path_search(cmd->argv[0], env_array);
+		if (!path)
+		{
+			ft_fprintf(STDERR_FILENO, "minishell: %s: command not found\n",
+				cmd->argv[0]);
+			free_env_array(env_array);
+			exit(127);
+		}
+		execve(path, cmd->argv, env_array);
 		ft_fprintf(STDERR_FILENO, "minishell: %s: %s\n",
 			cmd->argv[0], strerror(errno));
-		return (126);
+		free_env_array(env_array);
+		free(path);
+		exit(126);
 	}
-	return (status);
+	waitpid(pid, &status, 0);
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+	return (1);
 }
 
 int execute_external_command(t_cmd *cmd, t_shell *shell)
 {
 	pid_t pid;
 	int status;
+	char *executable;
+	char **env_array;
 
 	if (!cmd || !cmd->argv || !cmd->argv[0])
 		return (1);
@@ -93,8 +102,15 @@ int execute_external_command(t_cmd *cmd, t_shell *shell)
 	}
 	if (pid == 0)
 	{
-		status = execute_external(cmd, shell);
-		exit(status);
+		executable = find_executable(cmd->argv[0], &shell->env_list);
+		if (!executable)
+		{
+			ft_fprintf_stderr("minishell: %s: command not found\n",
+				cmd->argv[0]);
+			exit(127);
+		}
+		env_array = env_list_to_array(&shell->env_list);
+		execute_process(executable, cmd, env_array);
 	}
 	waitpid(pid, &status, 0);
 	if (WIFEXITED(status))

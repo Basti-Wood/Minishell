@@ -54,6 +54,8 @@ char	*expand_variables(char *str, t_shell *shell)
 	int		in_single;
 	int		in_double;
 
+	if (!str)
+		return (NULL);
 	result = allocate_result_buffer(str);
 	if (!result)
 		return (NULL);

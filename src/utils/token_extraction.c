@@ -79,6 +79,7 @@ char	*extract_token(const char *s, int *pos)
 	res_len = 0;
 	in_quotes = 0;
 	quote_char = 0;
+	i = skip_spaces(s, i);
 	redirect_len = is_redirect_operator(s, i);
 	if (redirect_len)
 	{

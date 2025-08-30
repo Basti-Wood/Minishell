@@ -182,6 +182,11 @@ int								execute_with_redirections(t_cmd *cmd,
 									t_shell *shell);
 int								execute_pipeline(t_cmd *cmds, t_shell *shell);
 int								execute_cmds(t_cmd *cmds, t_shell *shell);
+int								pipe_create(int pipe_fds[2]);
+int								pipe_execute_command(t_cmd *cmd, int *pipe_in,
+									int *pipe_out, t_shell *shell);
+int								pipe_wait_for_children(pid_t *pids, int count,
+									t_shell *shell);
 int								is_builtin(char *cmd);
 char							*find_executable(char *cmd,
 									t_env_list *env_list);
@@ -217,10 +222,21 @@ char							*get_variable_value(t_shell *shell,
 									char *var_name);
 int								should_expand_in_context(char c,
 									int in_single_quotes);
-int								handle_redirections_in_order(t_cmd *cmd);
-int								handle_input_redirections(t_cmd *cmd);
-int								handle_output_redirection(t_cmd *cmd);
+int								validate_input_file(const char *filename);
+int								open_input_file(const char *filename);
 int								handle_input_redirection(t_redir *redir);
+int								apply_input_redirections(t_cmd *cmd);
+int								restore_input(int saved_fd);
+int								validate_output_file(const char *filename);
+int								open_output_file(const char *filename, int flags);
+int								handle_output_redirection(t_redir *redir);
+int								apply_output_redirections(t_cmd *cmd);
+int								save_io_fds(int *saved_stdin, int *saved_stdout);
+void							restore_io_fds(int saved_stdin, int saved_stdout);
+int								handle_all_redirections(t_cmd *cmd);
+int								handle_redirections(t_cmd *cmd);
+int								setup_pipe_redirections(t_cmd *cmd, int *pipe_fds);
+void							cleanup_pipe_redirections(int *pipe_fds);
 int								handle_input_redir(t_token **tokens, t_cmd *cmd);
 int								handle_output_redir(t_token **tokens, t_cmd *cmd);
 int								handle_heredoc(char *delimiter, t_shell *shell);
@@ -341,7 +357,8 @@ int								apply_output_redirection(t_redir *redir,
 void							handle_quote_markers(char c, int *in_single_quotes);
 int								should_copy_char(char c);
 int								validate_input_files_before_output(t_cmd *cmd);
-int								validate_output_file(const char *filename);
 int								apply_redirections(t_cmd *cmd);
+int								handle_single_redirection(t_redir *redir);
+void							execute_process(char *executable, t_cmd *cmd, char **env_array);
 
 #endif

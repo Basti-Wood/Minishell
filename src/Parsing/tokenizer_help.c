@@ -54,6 +54,14 @@ static t_token	*split_expanded_token(char *expanded, t_token *prev)
 			return (NULL);
 		}
 		new_token->str = ft_strdup(words[i]);
+		if (!new_token->str)
+		{
+			free(new_token);
+			free_argv(words);
+			free_tokens(head);
+			free(expanded);
+			return (NULL);
+		}
 		new_token->type = EMPTY;
 		new_token->next = NULL;
 		new_token->prev = current ? current : prev;
@@ -74,6 +82,8 @@ static t_token	*create_single_token(char *element,
 {
 	char	*expanded;
 
+	if (!element)
+		return (NULL);
 	expanded = expand_variables(element, shell);
 	if (!expanded)
 		return (NULL);
