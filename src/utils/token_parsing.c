@@ -32,13 +32,20 @@ int	handle_operator_in_count(const char *s, int *i, int *count,
 {
 	if (is_operator(s[*i]))
 	{
-		if (!*in_token || *i == skip_spaces(s, 0))
+		if (*in_token)
+		{
+			*in_token = 0;
 			(*count)++;
-		if ((s[*i] == '>' && s[*i + 1] == '>') || (s[*i] == '<' && s[*i
-					+ 1] == '<'))
+		}
+		else if (s[*i])
+			(*count)++;
+		if (s[*i] == '|')
 			(*i)++;
-		(*i)++;
-		*in_token = 0;
+		else if ((s[*i] == '>' && s[*i + 1] == '>') || 
+				 (s[*i] == '<' && s[*i + 1] == '<'))
+			(*i) += 2;
+		else
+			(*i)++;
 		return (1);
 	}
 	return (0);

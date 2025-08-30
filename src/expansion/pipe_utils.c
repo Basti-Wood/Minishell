@@ -12,7 +12,7 @@ void	handle_broken_pipe(int status, int is_last_cmd)
 	if (WIFSIGNALED(status) && WTERMSIG(status) == SIGPIPE)
 	{
 		if (!is_last_cmd)
-			return ;
+			ft_fprintf_stderr("minishell: Broken pipe\n");
 	}
 }
 
@@ -34,7 +34,8 @@ void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
 			else if (WIFSIGNALED(status))
 				last_status = 128 + WTERMSIG(status);
 		}
-		handle_broken_pipe(status, i == cmd_count - 1);
+		else
+			handle_broken_pipe(status, 0);
 		i++;
 	}
 	shell->exit_status = last_status;

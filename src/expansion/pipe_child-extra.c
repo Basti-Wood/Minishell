@@ -19,7 +19,7 @@ void	setup_child_process(t_child_data *data)
 {
 	int	redir_status;
 
-	signal(SIGPIPE, SIG_IGN);
+	signal(SIGPIPE, SIG_DFL);
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
 	setup_child_pipes(data->i, data->cmd_count, data->pipes);

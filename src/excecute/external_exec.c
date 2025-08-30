@@ -12,29 +12,32 @@
 
 #include "../include/minishell.h"
 
+static void	print_exec_error(char *cmd)
+{
+	if (ft_strchr(cmd, '/'))
+	{
+		if (errno == EACCES)
+			ft_fprintf_stderr("minishell: %s: Permission denied\n", cmd);
+		else
+			ft_fprintf_stderr("minishell: %s: No such file or directory\n", cmd);
+	}
+	else
+		ft_fprintf_stderr("minishell: %s: command not found\n", cmd);
+}
+
 void	execute_process(char *executable, t_cmd *cmd, char **env_array)
 {
-	struct stat st;
+	struct stat	st;
 
 	if (stat(executable, &st) == -1)
 	{
-		if (ft_strchr(cmd->argv[0], '/'))
-		{
-			if (errno == ENOENT)
-				ft_fprintf_stderr("minishell: %s: No such file or directory\n", 
-					executable);
-			else
-				ft_fprintf_stderr("minishell: %s: Permission denied\n", executable);
-			cleanup_process_resources(executable, env_array);
-			exit(127);
-		}
-		ft_fprintf_stderr("minishell: %s: command not found\n", executable);
+		print_exec_error(cmd->argv[0]);
 		cleanup_process_resources(executable, env_array);
 		exit(127);
 	}
 	if (S_ISDIR(st.st_mode))
 	{
-		ft_fprintf_stderr("minishell: %s: Is a directory\n", executable);
+		ft_fprintf_stderr("minishell: %s: Is a directory\n", cmd->argv[0]);
 		cleanup_process_resources(executable, env_array);
 		exit(126);
 	}
@@ -46,18 +49,18 @@ void	execute_process(char *executable, t_cmd *cmd, char **env_array)
 	}
 	else if (errno == EACCES)
 	{
-		ft_fprintf_stderr("minishell: %s: Permission denied\n", executable);
+		ft_fprintf_stderr("minishell: %s: Permission denied\n", cmd->argv[0]);
 		cleanup_process_resources(executable, env_array);
 		exit(126);
 	}
-	ft_fprintf_stderr("minishell: %s: command not found\n", executable);
+	print_exec_error(cmd->argv[0]);
 	cleanup_process_resources(executable, env_array);
 	exit(127);
 }
 
 void	cleanup_process_resources(char *executable, char **env_array)
 {
-	if (executable && ft_strchr(executable, '/'))
+	if (executable)
 		free(executable);
 	if (env_array)
 		free_string_array(env_array);

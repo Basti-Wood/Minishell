@@ -25,38 +25,6 @@ static void	close_all_child_pipes(int **pipes, int cmd_count)
 	}
 }
 
-int has_input_redirect(t_cmd *cmd)
-{
-	t_redir *current;
-
-	if (!cmd || !cmd->redirs)
-		return (0);
-	current = cmd->redirs;
-	while (current)
-	{
-		if (current->type == REDIR_INPUT || current->type == REDIR_HEREDOC)
-			return (1);
-		current = current->next;
-	}
-	return (cmd->heredoc > 0);
-}
-
-int has_output_redirect(t_cmd *cmd)
-{
-	t_redir *current;
-
-	if (!cmd || !cmd->redirs)
-		return (0);
-	current = cmd->redirs;
-	while (current)
-	{
-		if (current->type == REDIR_OUTPUT || current->type == REDIR_APPEND)
-			return (1);
-		current = current->next;
-	}
-	return (0);
-}
-
 int	setup_child_pipes(int i, int cmd_count, int **pipes)
 {
 	if (i > 0)
@@ -67,17 +35,34 @@ int	setup_child_pipes(int i, int cmd_count, int **pipes)
 	return (0);
 }
 
+static void	handle_exec_error(char *cmd, char *executable)
+{
+	if (ft_strchr(cmd, '/'))
+		ft_fprintf_stderr("minishell: %s: No such file or directory\n", cmd);
+	else
+		ft_fprintf_stderr("minishell: %s: command not found\n", cmd);
+	if (executable)
+		free(executable);
+}
+
+static void	handle_directory_error(char *executable, char **env_array)
+{
+	ft_fprintf_stderr("minishell: %s: Is a directory\n", executable);
+	free(executable);
+	free_string_array(env_array);
+	exit(126);
+}
+
 void	execute_child_external(t_cmd *current, t_shell *shell)
 {
-	char	*executable;
-	char	**env_array;
+	char		*executable;
+	char		**env_array;
 	struct stat	st;
 
 	executable = find_executable(current->argv[0], &shell->env_list);
 	if (!executable)
 	{
-		ft_fprintf_stderr("minishell: %s: command not found\n",
-			current->argv[0]);
+		handle_exec_error(current->argv[0], executable);
 		exit(127);
 	}
 	env_array = env_list_to_array(&shell->env_list);
@@ -87,18 +72,14 @@ void	execute_child_external(t_cmd *current, t_shell *shell)
 		exit(1);
 	}
 	if (stat(executable, &st) == 0 && S_ISDIR(st.st_mode))
-	{
-		ft_fprintf_stderr("minishell: %s: Is a directory\n", executable);
-		free(executable);
-		free_string_array(env_array);
-		exit(126);
-	}
+		handle_directory_error(executable, env_array);
 	execve(executable, current->argv, env_array);
 	if (errno == EACCES)
-	{
 		ft_fprintf_stderr("minishell: %s: Permission denied\n", executable);
-		exit(126);
-	}
-	ft_fprintf_stderr("minishell: %s: command not found\n", executable);
+	else if (errno == ENOENT && ft_strchr(current->argv[0], '/'))
+		ft_fprintf_stderr("minishell: %s: No such file or directory\n",
+			current->argv[0]);
+	else
+		ft_fprintf_stderr("minishell: %s: command not found\n", executable);
 	exit(127);
 }
