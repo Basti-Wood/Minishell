@@ -56,7 +56,7 @@ int handle_single_redirection(t_redir *redir)
 		return (apply_output_redirection(redir, 0));
 }
 
-int apply_input_redir(t_redir *redir, int *saved_stdin)
+int apply_input_redir_safe(t_redir *redir, int *saved_stdin)
 {
 	int fd;
 
@@ -86,7 +86,7 @@ int apply_input_redir(t_redir *redir, int *saved_stdin)
 	return (0);
 }
 
-int apply_output_redir(t_redir *redir, int *saved_stdout)
+int apply_output_redir_safe(t_redir *redir, int *saved_stdout)
 {
 	int fd;
 	int flags;
@@ -122,22 +122,8 @@ int process_single_redir(t_redir *redir, int *saved_stdin, int *saved_stdout)
 	if (redir->type == REDIR_HEREDOC)
 		return (0);
 	if (redir->type == REDIR_INPUT)
-		return (apply_input_redir(redir, saved_stdin));
+		return (apply_input_redir_safe(redir, saved_stdin));
 	if (redir->type == REDIR_OUTPUT || redir->type == REDIR_APPEND)
-		return (apply_output_redir(redir, saved_stdout));
+		return (apply_output_redir_safe(redir, saved_stdout));
 	return (0);
-}
-
-int execute_with_redirections(t_cmd *cmd, t_shell *shell)
-{
-	if (!cmd)
-		return (1);
-	if (handle_redirections(cmd) != 0)
-	{
-		shell->exit_status = 1;
-		return (1);
-	}
-	if (!cmd->argv || !cmd->argv[0])
-		return (0);
-	return (execute_external_command(cmd, shell));
 }

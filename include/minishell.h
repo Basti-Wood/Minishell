@@ -166,6 +166,8 @@ void							free_token_list(t_token *head);
 t_token							*create_new_token(char *str, t_token_type type);
 void							append_token(t_token **head, t_token *new_token);
 t_cmd							*parse_tokens(t_token *tokens, t_shell *shell);
+t_cmd							*parse_command_line(t_token *tokens, t_shell *shell);
+t_cmd							*parse_pipeline(t_token **tokens, t_shell *shell);
 t_cmd							*process_commands(t_token *tokens,
 									t_shell *shell);
 t_token							*handle_empty_expansions(t_token *tokens);

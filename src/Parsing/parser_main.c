@@ -1,52 +1,73 @@
 #include "../../include/minishell.h"
 
-int	process_token(t_token **tokens, t_cmd *cmd, int *argc, t_shell *shell)
+int	process_regular_token(t_token **tokens, t_cmd *cmd, int *argc)
 {
 	char	*cleaned_str;
 
-	if (!tokens || !*tokens || !cmd || !argc)
-		return (0);
-	if ((*tokens)->type == CMD || (*tokens)->type == ARG)
+	cleaned_str = remove_quote_markers((*tokens)->str);
+	if (!cleaned_str)
+		return (-1);
+	if (!add_argument(cmd, cleaned_str, argc))
 	{
-		cleaned_str = remove_quote_markers((*tokens)->str);
-		if (!cleaned_str)
-			return (0);
-		if (!add_argument(cmd, cleaned_str, argc))
-		{
-			free(cleaned_str);
-			return (0);
-		}
 		free(cleaned_str);
+		return (-1);
 	}
-	else if (is_redirection_token((*tokens)->type))
+	free(cleaned_str);
+	return (1);
+}
+
+int	process_token(t_token **tokens, t_cmd *cmd, int *argc, t_shell *shell)
+{
+	int	tokens_consumed;
+
+	if (!tokens || !*tokens || !cmd || !argc)
+		return (-1);
+	if ((*tokens)->type == CMD || (*tokens)->type == ARG)
+		return (process_regular_token(tokens, cmd, argc));
+	if (is_redirection_token((*tokens)->type))
 	{
-		if (!handle_redirection(tokens, cmd, shell))
-			return (0);
+		tokens_consumed = handle_redirection(tokens, cmd, shell);
+		return (tokens_consumed);
 	}
 	return (1);
 }
 
-t_cmd	*process_command_tokens(t_token **tokens, t_shell *shell)
+void	advance_tokens(t_token **tokens, int count)
+{
+	int	i;
+
+	if (!tokens || !*tokens || count <= 0)
+		return ;
+	i = 0;
+	while (i < count && *tokens)
+	{
+		*tokens = (*tokens)->next;
+		i++;
+	}
+}
+
+t_cmd	*init_and_process_cmd(t_token **tokens, t_shell *shell)
 {
 	t_cmd	*new_cmd;
 	int		argc;
+	int		tokens_consumed;
 
 	argc = 0;
-	if (!tokens || !*tokens)
-		return (NULL);
 	new_cmd = init_new_cmd();
 	if (!new_cmd)
 		return (NULL);
+	
 	while (*tokens && (*tokens)->type != PIPE && (*tokens)->type != END)
 	{
-		if (!process_token(tokens, new_cmd, &argc, shell))
+		tokens_consumed = process_token(tokens, new_cmd, &argc, shell);
+		if (tokens_consumed <= 0)
 		{
 			free_cmds(new_cmd);
 			return (NULL);
 		}
-		*tokens = (*tokens)->next;
+		advance_tokens(tokens, tokens_consumed);
 	}
-	if (argc == 0 && !new_cmd->redirs && !new_cmd->infiles && !new_cmd->outfiles)
+	if (argc == 0 && !new_cmd->redirs)
 	{
 		free_cmds(new_cmd);
 		return (NULL);
@@ -54,52 +75,9 @@ t_cmd	*process_command_tokens(t_token **tokens, t_shell *shell)
 	return (new_cmd);
 }
 
-static void	add_cmd_to_pipeline(t_cmd **cmd_list,
-								t_cmd **current_cmd, t_cmd *new_cmd)
+t_cmd	*process_command_tokens(t_token **tokens, t_shell *shell)
 {
-	if (!*cmd_list)
-	{
-		*cmd_list = new_cmd;
-		*current_cmd = new_cmd;
-	}
-	else
-	{
-		(*current_cmd)->next = new_cmd;
-		*current_cmd = new_cmd;
-	}
-}
-
-t_cmd	*parse_pipeline(t_token **tokens, t_shell *shell)
-{
-	t_cmd	*cmd_list;
-	t_cmd	*current_cmd;
-	t_cmd	*new_cmd;
-
-	cmd_list = NULL;
-	current_cmd = NULL;
-	while (*tokens && (*tokens)->type != END)
-	{
-		new_cmd = process_command_tokens(tokens, shell);
-		if (!new_cmd)
-		{
-			free_cmds(cmd_list);
-			return (NULL);
-		}
-		add_cmd_to_pipeline(&cmd_list, &current_cmd, new_cmd);
-		if (*tokens && (*tokens)->type == PIPE)
-			*tokens = (*tokens)->next;
-	}
-	return (cmd_list);
-}
-
-t_cmd	*parse_command_line(t_token *tokens, t_shell *shell)
-{
-	t_cmd	*cmd_list;
-	t_token	*current;
-
-	if (!tokens || !shell)
+	if (!tokens || !*tokens)
 		return (NULL);
-	current = tokens;
-	cmd_list = parse_pipeline(&current, shell);
-	return (cmd_list);
+	return (init_and_process_cmd(tokens, shell));
 }

@@ -1,16 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   pipe_child-extra.c                                 :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/08 17:45:01 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../../include/minishell.h"
+#include "../include/minishell.h"
 
 static void	execute_child_builtin(t_cmd *current, t_shell *shell)
 {
@@ -31,7 +19,7 @@ void	setup_child_process(t_child_data *data)
 {
 	int	redir_status;
 
-	signal(SIGPIPE, SIG_DFL);
+	signal(SIGPIPE, SIG_IGN);
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
 	setup_child_pipes(data->i, data->cmd_count, data->pipes);

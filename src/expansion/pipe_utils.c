@@ -1,20 +1,41 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   pipe_utils.c                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/08 17:43:36 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "../../include/minishell.h"
+#include "../include/minishell.h"
 
 int	has_pipe(t_cmd *cmds)
 {
 	if (!cmds)
 		return (0);
 	return (cmds->next != NULL);
+}
+
+void	handle_broken_pipe(int status, int is_last_cmd)
+{
+	if (WIFSIGNALED(status) && WTERMSIG(status) == SIGPIPE)
+	{
+		if (!is_last_cmd)
+			return ;
+	}
+}
+
+void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
+{
+	int	i;
+	int	status;
+	int	last_status;
+
+	i = 0;
+	last_status = 0;
+	while (i < cmd_count)
+	{
+		waitpid(pids[i], &status, 0);
+		if (i == cmd_count - 1)
+		{
+			if (WIFEXITED(status))
+				last_status = WEXITSTATUS(status);
+			else if (WIFSIGNALED(status))
+				last_status = 128 + WTERMSIG(status);
+		}
+		handle_broken_pipe(status, i == cmd_count - 1);
+		i++;
+	}
+	shell->exit_status = last_status;
 }

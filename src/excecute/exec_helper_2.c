@@ -1,16 +1,4 @@
-#include "../include/minishell.h"
-
-int	get_argc(char **argv)
-{
-	int	count;
-
-	count = 0;
-	if (!argv)
-		return (0);
-	while (argv[count])
-		count++;
-	return (count);
-}
+#include "../../include/minishell.h"
 
 int	save_file_descriptors(int *saved_stdin, int *saved_stdout)
 {
@@ -50,12 +38,12 @@ int	execute_command(t_cmd *cmd, t_shell *shell)
 	result = 0;
 	if (handle_redirections(cmd) != 0)
 		result = 1;
-	else if (cmd->argv && cmd->argv[0])
+	else
 	{
-		if (is_builtin(cmd->argv[0]))
-		{
+		if (!cmd->argv || !cmd->argv[0])
+			result = 0;
+		else if (is_builtin(cmd->argv[0]))
 			result = execute_builtin(cmd, shell);
-		}
 		else
 			result = execute_external_command(cmd, shell);
 	}
@@ -63,27 +51,14 @@ int	execute_command(t_cmd *cmd, t_shell *shell)
 	return (result);
 }
 
-int	validate_all_redirects(t_cmd *cmd)
+int	get_argc(char **argv)
 {
-	t_redir	*current;
+	int	count;
 
-	if (!cmd || !cmd->redirs)
+	count = 0;
+	if (!argv)
 		return (0);
-	current = cmd->redirs;
-	while (current)
-	{
-		if (current->type == REDIR_INPUT && current->filename)
-		{
-			if (access(current->filename, F_OK) == -1)
-			{
-				ft_fprintf_stderr("minishell: %s: No such file or directory\n",
-					current->filename);
-				return (1);
-			}
-		}
-		current = current->next;
-	}
-	return (0);
+	while (argv[count])
+		count++;
+	return (count);
 }
-
-

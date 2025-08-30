@@ -29,7 +29,12 @@ static int	should_continue_token(const char *s, int i)
 static int	handle_token_content(const char *s, int *i, char *quote)
 {
 	if (handle_quote_in_count(s, i, quote))
-		return (1);
+	{
+		// After processing a quote, check if token should end
+		if (!s[*i] || ft_isspace(s[*i]) || is_operator(s[*i]))
+			return (0); // End token
+		return (1); // Continue token if more content follows immediately
+	}
 	handle_regular_chars(s, i);
 	if (should_continue_token(s, *i))
 		return (1);
