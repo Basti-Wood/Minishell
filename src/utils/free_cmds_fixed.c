@@ -5,12 +5,12 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/18 10:00:00 by seftekha          #+#    #+#             */
-/*   Updated: Fixed version to prevent double free       ###   ########.fr       */
+/*   Created: 2025/08/18 17:22:49 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 
 void	free_cmds(t_cmd *cmds)
 {

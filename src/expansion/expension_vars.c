@@ -1,22 +1,34 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   expansion_vars.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/27 16:00:00 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/27 16:00:00 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
-char *ft_strncpy(char *dest, const char *src, size_t n) {
-    char *d = dest;
-    const char *s = src;
+char	*ft_strncpy(char *dest, const char *src, size_t n)
+{
+	char		*d;
+	const char	*s = src;
 
-    // Copy characters until n runs out or we hit '\0'
-    while (n > 0 && *s != '\0') {
-        *d++ = *s++;
-        n--;
-    }
-
-    // Pad with '\0' if needed
-    while (n > 0) {
-        *d++ = '\0';
-        n--;
-    }
-
-    return dest;
+	d = dest;
+	while (n > 0 && *s != '\0')
+	{
+		*d++ = *s++;
+		n--;
+	}
+	while (n > 0)
+	{
+		*d++ = '\0';
+		n--;
+	}
+	return (dest);
 }
 
 char	*get_var_name(char **src)

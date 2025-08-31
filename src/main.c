@@ -12,6 +12,11 @@
 
 #include "../include/minishell.h"
 
+void	handle_sigint(int sig)
+{
+	g_signal_status = sig;
+}
+
 int	main(int argc, char **argv, char **env)
 {
 	(void)argc;

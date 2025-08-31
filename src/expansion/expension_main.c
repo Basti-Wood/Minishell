@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   expansion_main.c                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/27 16:00:00 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/27 16:00:00 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
 static char	*allocate_result_buffer(char *str)
@@ -5,6 +17,8 @@ static char	*allocate_result_buffer(char *str)
 	char	*result;
 	int		size;
 
+	if (!str)
+		return (NULL);
 	size = ft_strlen(str) * 10 + 1024;
 	result = malloc(size);
 	if (!result)
@@ -46,13 +60,34 @@ void	handle_quote_markers(char c, int *in_single_quotes)
 		*in_single_quotes = 0;
 }
 
+static char	*process_expansion(char *src, char *dst, t_shell *shell)
+{
+	int	in_single;
+	int	in_double;
+
+	in_single = 0;
+	in_double = 0;
+	while (*src)
+	{
+		if (handle_quote_marker(*src, &in_single, &in_double))
+		{
+			*dst++ = *src++;
+			continue ;
+		}
+		if (*src == '$' && !in_single)
+			dst = expand_dollar(&src, dst, shell);
+		else
+			*dst++ = *src++;
+	}
+	*dst = '\0';
+	return (dst);
+}
+
 char	*expand_variables(char *str, t_shell *shell)
 {
 	char	*result;
 	char	*src;
 	char	*dst;
-	int		in_single;
-	int		in_double;
 
 	if (!str)
 		return (NULL);
@@ -61,20 +96,6 @@ char	*expand_variables(char *str, t_shell *shell)
 		return (NULL);
 	src = str;
 	dst = result;
-	in_single = 0;
-	in_double = 0;
-	while (*src)
-	{
-		if (handle_quote_marker(*src, &in_single, &in_double))
-		{
-			*dst++ = *src++;
-			continue;
-		}
-		if (*src == '$' && !in_single)
-			dst = expand_dollar(&src, dst, shell);
-		else
-			*dst++ = *src++;
-	}
-	*dst = '\0';
+	process_expansion(src, dst, shell);
 	return (result);
 }

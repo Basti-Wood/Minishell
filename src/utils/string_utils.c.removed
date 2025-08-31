@@ -1,8 +1,8 @@
 #include "../../include/minishell.h"
 
-char *ft_strncpy(char *dest, const char *src, size_t n)
+char	*ft_strncpy(char *dest, const char *src, size_t n)
 {
-	size_t i;
+	size_t	i;
 
 	i = 0;
 	while (i < n && src[i])
@@ -18,11 +18,11 @@ char *ft_strncpy(char *dest, const char *src, size_t n)
 	return (dest);
 }
 
-void shift_argv(char ***argv)
+void	shift_argv(char ***argv)
 {
-	char **new_argv;
-	int i;
-	int count;
+	char	**new_argv;
+	int		i;
+	int		count;
 
 	if (!argv || !*argv || !(*argv)[0])
 		return ;

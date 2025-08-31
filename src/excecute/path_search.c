@@ -24,11 +24,37 @@ static char	*try_path_access(char *dir, char *cmd)
 	free(tmp);
 	if (!full_path)
 		return (NULL);
-
 	if (access(full_path, X_OK) == 0)
 		return (full_path);
-
 	free(full_path);
+	return (NULL);
+}
+
+static char	*find_path_env(char **envp)
+{
+	int	i;
+
+	i = 0;
+	while (envp[i] && ft_strncmp(envp[i], "PATH=", 5) != 0)
+		i++;
+	if (!envp[i])
+		return (NULL);
+	return (envp[i] + 5);
+}
+
+static char	*search_paths_array(char **paths, const char *cmd)
+{
+	char	*result;
+	int		i;
+
+	i = 0;
+	while (paths[i])
+	{
+		result = try_path_access(paths[i], (char *)cmd);
+		if (result)
+			return (result);
+		i++;
+	}
 	return (NULL);
 }
 
@@ -37,34 +63,18 @@ char	*path_search(const char *cmd, char **envp)
 	char	*path_env;
 	char	**paths;
 	char	*result;
-	int		i;
 
 	if (!cmd || !*cmd || !envp)
 		return (NULL);
 	if (ft_strchr(cmd, '/'))
 		return (ft_strdup(cmd));
-
-	i = 0;
-	while (envp[i] && ft_strncmp(envp[i], "PATH=", 5) != 0)
-		i++;
-	if (!envp[i])  // No PATH in environment
+	path_env = find_path_env(envp);
+	if (!path_env)
 		return (NULL);
-
-	path_env = envp[i] + 5;
 	paths = ft_split(path_env, ':');
 	if (!paths)
 		return (NULL);
-
-	i = 0;
-	while (paths[i])
-	{
-		if ((result = try_path_access(paths[i], (char *)cmd)))
-		{
-			free_paths_array(paths);
-			return (result);
-		}
-		i++;
-	}
+	result = search_paths_array(paths, cmd);
 	free_paths_array(paths);
-	return (NULL);
+	return (result);
 }

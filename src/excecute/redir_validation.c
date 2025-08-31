@@ -1,24 +1,42 @@
-#include "../include/minishell.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   redirection_validation.c                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-int	validate_all_redirects(t_cmd *cmd)
+#include "../../include/minishell.h"
+
+int	apply_append_redir(t_redir *redir)
 {
-	t_redir	*current;
+	int	fd;
+	int	flags;
 
-	if (!cmd || !cmd->redirs)
-		return (0);
-	current = cmd->redirs;
-	while (current)
-	{
-		if (current->type == REDIR_INPUT && current->filename)
-		{
-			if (access(current->filename, F_OK) == -1)
-			{
-				ft_fprintf_stderr("minishell: %s: No such file or directory\n",
-					current->filename);
-				return (1);
-			}
-		}
-		current = current->next;
-	}
+	flags = O_WRONLY | O_CREAT | O_APPEND;
+	fd = open(redir->filename, flags, 0644);
+	if (fd == -1)
+		return (1);
+	dup2(fd, STDOUT_FILENO);
+	close(fd);
+	return (0);
+}
+
+int	process_redir_with_validation(t_redir *redir)
+{
+	if (!redir || !redir->filename)
+		return (1);
+	if (validate_single_redir(redir) != 0)
+		return (1);
+	if (redir->type == REDIR_INPUT)
+		return (apply_input_redir(redir));
+	else if (redir->type == REDIR_OUTPUT)
+		return (apply_output_redir(redir));
+	else if (redir->type == REDIR_APPEND)
+		return (apply_append_redir(redir));
 	return (0);
 }

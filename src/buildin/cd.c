@@ -1,6 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   cd.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
-static int validate_args(char **args)
+static int	validate_args(char **args)
 {
 	if (args[1] && args[2])
 	{
@@ -10,9 +22,9 @@ static int validate_args(char **args)
 	return (0);
 }
 
-static char *get_target_path(char **args, t_env_list *env_list)
+static char	*get_target_path(char **args, t_env_list *env_list)
 {
-	char *home;
+	char	*home;
 
 	if (!args[1])
 	{
@@ -27,8 +39,7 @@ static char *get_target_path(char **args, t_env_list *env_list)
 	return (args[1]);
 }
 
-static void update_pwd_vars(t_env_list *env_list,
-	char *old_pwd, char *new_pwd)
+static void	update_pwd_vars(t_env_list *env_list, char *old_pwd, char *new_pwd)
 {
 	if (old_pwd)
 		set_env_value(env_list, "OLDPWD", old_pwd);
@@ -39,11 +50,11 @@ static void update_pwd_vars(t_env_list *env_list,
 	}
 }
 
-int builtin_cd(char **args, t_env_list *env_list)
+int	builtin_cd(char **args, t_env_list *env_list)
 {
-	char *path;
-	char *old_pwd;
-	char *new_pwd;
+	char	*path;
+	char	*old_pwd;
+	char	*new_pwd;
 
 	if (validate_args(args))
 		return (1);

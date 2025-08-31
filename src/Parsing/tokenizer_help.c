@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   tokenizer_help.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
 static int	check_for_quotes(char *str)
@@ -47,7 +59,7 @@ static t_token	*split_expanded_token(char *expanded, t_token *prev)
 	i = 0;
 	while (words[i])
 	{
-		append_token(&head, create_new_token(ft_strdup(words[i]), EMPTY));
+		append_token(&head, create_new_token(words[i], EMPTY));
 		i++;
 	}
 	free_argv(words);
@@ -73,7 +85,6 @@ t_token	*create_token(char **elements, t_shell *shell)
 	t_token	*head;
 	t_token	*current;
 	t_token	*new_tokens;
-	t_token	*last;
 	int		i;
 
 	if (!elements || !shell)
@@ -89,14 +100,7 @@ t_token	*create_token(char **elements, t_shell *shell)
 			free_tokens(head);
 			return (NULL);
 		}
-		last = new_tokens;
-		while (last->next)
-			last = last->next;
-		if (current)
-			current->next = new_tokens;
-		else
-			head = new_tokens;
-		current = last;
+		link_tokens(&head, &current, new_tokens);
 		i++;
 	}
 	return (head);

@@ -1,9 +1,23 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser_main.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
 int	process_regular_token(t_token **tokens, t_cmd *cmd, int *argc)
 {
 	char	*cleaned_str;
 
+	if (!tokens || !*tokens || !(*tokens)->str || !cmd || !argc)
+		return (-1);
 	cleaned_str = remove_quote_markers((*tokens)->str);
 	if (!cleaned_str)
 		return (-1);
@@ -56,7 +70,6 @@ t_cmd	*init_and_process_cmd(t_token **tokens, t_shell *shell)
 	new_cmd = init_new_cmd();
 	if (!new_cmd)
 		return (NULL);
-	
 	while (*tokens && (*tokens)->type != PIPE && (*tokens)->type != END)
 	{
 		tokens_consumed = process_token(tokens, new_cmd, &argc, shell);

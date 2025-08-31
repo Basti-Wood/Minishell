@@ -38,8 +38,8 @@ static void	skip_operator(const char *s, int *i)
 {
 	if (s[*i] == '|')
 		(*i)++;
-	else if ((s[*i] == '>' && s[*i + 1] == '>') ||
-			 (s[*i] == '<' && s[*i + 1] == '<'))
+	else if ((s[*i] == '>' && s[*i + 1] == '>') || (s[*i] == '<' && s[*i
+				+ 1] == '<'))
 		(*i) += 2;
 	else
 		(*i)++;

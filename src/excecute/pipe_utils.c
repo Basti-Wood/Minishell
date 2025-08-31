@@ -12,6 +12,33 @@
 
 #include "../../include/minishell.h"
 
+void	cleanup_pipes_on_error(int **pipes, int allocated_count)
+{
+	int	i;
+
+	i = 0;
+	while (i < allocated_count)
+	{
+		if (pipes[i])
+			free(pipes[i]);
+		i++;
+	}
+	free(pipes);
+}
+
+int	allocate_single_pipe(int **pipes, int index)
+{
+	pipes[index] = malloc(sizeof(int) * 2);
+	if (!pipes[index])
+		return (1);
+	if (pipe(pipes[index]) == -1)
+	{
+		free(pipes[index]);
+		return (1);
+	}
+	return (0);
+}
+
 int	**create_pipes(int cmd_count)
 {
 	int	**pipes;
@@ -25,19 +52,9 @@ int	**create_pipes(int cmd_count)
 	i = 0;
 	while (i < cmd_count - 1)
 	{
-		pipes[i] = malloc(sizeof(int) * 2);
-		if (!pipes[i])
+		if (allocate_single_pipe(pipes, i) != 0)
 		{
-			while (--i >= 0)
-				free(pipes[i]);
-			free(pipes);
-			return (NULL);
-		}
-		if (pipe(pipes[i]) == -1)
-		{
-			while (i >= 0)
-				free(pipes[i--]);
-			free(pipes);
+			cleanup_pipes_on_error(pipes, i);
 			return (NULL);
 		}
 		i++;

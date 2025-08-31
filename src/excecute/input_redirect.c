@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   input_redirect.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/08 15:53:42 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/08 15:54:03 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
-static int process_redir_loop(t_redir *redir, int *fd)
+static int	process_redir_loop(t_redir *redir, int *fd)
 {
-	t_redir *current;
-	int result;
-	
+	t_redir	*current;
+	int		result;
+
 	current = redir;
 	while (current)
 	{
@@ -16,10 +28,10 @@ static int process_redir_loop(t_redir *redir, int *fd)
 	return (0);
 }
 
-int handle_input_redirections(t_cmd *cmd)
+int	handle_input_redirections(t_cmd *cmd)
 {
-	int fd;
-	int result;
+	int	fd;
+	int	result;
 
 	fd = -1;
 	if (!cmd)

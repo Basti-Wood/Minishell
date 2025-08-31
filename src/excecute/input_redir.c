@@ -1,10 +1,22 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   input_redir.c                                     :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
-int validate_input_file(const char *filename)
+int	validate_input_file(const char *filename)
 {
 	if (access(filename, F_OK) == -1)
 	{
-		ft_fprintf_stderr("minishell: %s: No such file or directory\n", 
+		ft_fprintf_stderr("minishell: %s: No such file or directory\n",
 			filename);
 		return (1);
 	}
@@ -16,9 +28,9 @@ int validate_input_file(const char *filename)
 	return (0);
 }
 
-int open_input_file(const char *filename)
+int	open_input_file(const char *filename)
 {
-	int fd;
+	int	fd;
 
 	if (validate_input_file(filename))
 		return (-1);
@@ -31,10 +43,10 @@ int open_input_file(const char *filename)
 	return (fd);
 }
 
-int handle_input_redirection(t_redir *redir)
+int	handle_input_redirection(t_redir *redir)
 {
-	int fd;
-	int saved_stdin;
+	int	fd;
+	int	saved_stdin;
 
 	if (!redir || !redir->filename)
 		return (0);
@@ -57,10 +69,10 @@ int handle_input_redirection(t_redir *redir)
 	return (0);
 }
 
-int apply_input_redirections(t_cmd *cmd)
+int	apply_input_redirections(t_cmd *cmd)
 {
-	t_redir *current;
-	int result;
+	t_redir	*current;
+	int		result;
 
 	if (!cmd)
 		return (0);
@@ -75,7 +87,7 @@ int apply_input_redirections(t_cmd *cmd)
 	return (0);
 }
 
-int restore_input(int saved_fd)
+int	restore_input(int saved_fd)
 {
 	if (saved_fd != -1)
 	{

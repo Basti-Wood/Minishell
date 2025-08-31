@@ -10,12 +10,12 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 
 void	shift_argv(char ***argv)
 {
-	int	i;
-	int	j;
+	int		i;
+	int		j;
 	char	**args;
 
 	if (!argv || !*argv)

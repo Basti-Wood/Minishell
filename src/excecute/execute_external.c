@@ -1,37 +1,16 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   execute_external.c                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/28 16:04:15 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
-
-int	create_env_array(t_shell *shell, char ***env_array)
-{
-	t_env_node	*current;
-	char		*env_str;
-	char		*tmp;
-	int			env_count;
-
-	env_count = shell->env_list.size;
-	*env_array = malloc(sizeof(char *) * (env_count + 1));
-	if (!*env_array)
-		return (1);
-	env_count = 0;
-	current = shell->env_list.head;
-	while (current)
-	{
-		if (current->value)
-			env_str = ft_strjoin(current->key, "=");
-		else
-			env_str = ft_strdup(current->key);
-		if (env_str && current->value)
-		{
-			tmp = env_str;
-			env_str = ft_strjoin(env_str, current->value);
-			free(tmp);
-		}
-		if (env_str)
-			(*env_array)[env_count++] = env_str;
-		current = current->next;
-	}
-	(*env_array)[env_count] = NULL;
-	return (0);
-}
 
 void	free_env_array(char **env_array)
 {
@@ -57,7 +36,8 @@ static void	handle_command_error(char *cmd)
 		if (stat(cmd, &st) == 0 && S_ISDIR(st.st_mode))
 			ft_fprintf_stderr("minishell: %s: Is a directory\n", cmd);
 		else
-			ft_fprintf_stderr("minishell: %s: No such file or directory\n", cmd);
+			ft_fprintf_stderr("minishell: %s: No such file or directory\n",
+				cmd);
 	}
 	else
 		ft_fprintf_stderr("minishell: %s: command not found\n", cmd);
@@ -65,8 +45,8 @@ static void	handle_command_error(char *cmd)
 
 static void	handle_exec_child(t_cmd *cmd, t_shell *shell)
 {
-	char		*executable;
-	char		**env_array;
+	char	*executable;
+	char	**env_array;
 
 	executable = find_executable(cmd->argv[0], &shell->env_list);
 	if (!executable)

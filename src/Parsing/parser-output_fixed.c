@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser_output.c                               :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
 static t_redir_type	get_output_type(t_token_type token_type)
@@ -46,9 +58,27 @@ static int	close_previous_heredoc(t_cmd *cmd)
 	return (0);
 }
 
-int	handle_heredoc_redir(t_token **tokens, t_cmd *cmd, t_shell *shell)
+static int	create_and_setup_heredoc(t_cmd *cmd, char *delimiter,
+			t_shell *shell)
 {
 	t_redir	*redir;
+
+	cmd->heredoc = handle_heredoc(delimiter, shell);
+	if (cmd->heredoc == -1)
+		return (-1);
+	redir = create_redir(NULL, REDIR_HEREDOC);
+	if (!redir)
+	{
+		close(cmd->heredoc);
+		cmd->heredoc = -1;
+		return (-1);
+	}
+	add_to_ordered_redirs(cmd, redir);
+	return (0);
+}
+
+int	handle_heredoc_redir(t_token **tokens, t_cmd *cmd, t_shell *shell)
+{
 	char	*delimiter;
 	t_token	*next_token;
 
@@ -61,17 +91,11 @@ int	handle_heredoc_redir(t_token **tokens, t_cmd *cmd, t_shell *shell)
 	delimiter = remove_quote_markers(next_token->str);
 	if (!delimiter)
 		return (-1);
-	cmd->heredoc = handle_heredoc(delimiter, shell);
-	free(delimiter);
-	if (cmd->heredoc == -1)
-		return (-1);
-	redir = create_redir(NULL, REDIR_HEREDOC);
-	if (!redir)
+	if (create_and_setup_heredoc(cmd, delimiter, shell) == -1)
 	{
-		close(cmd->heredoc);
-		cmd->heredoc = -1;
+		free(delimiter);
 		return (-1);
 	}
-	add_to_ordered_redirs(cmd, redir);
+	free(delimiter);
 	return (2);
 }

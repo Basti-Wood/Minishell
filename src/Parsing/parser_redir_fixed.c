@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   token_type_assign.c                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
 t_redir	*create_redir(char *filename, t_redir_type type)
@@ -17,7 +29,7 @@ int	validate_redir_filename(t_token *next_token)
 {
 	if (!next_token || !next_token->str)
 	{
-		ft_fprintf_stderr("minishell: syntax error near unexpected token `newline'\n");
+		ft_fprintf_stderr("minishell: syntax error near unexpected token\n");
 		return (0);
 	}
 	return (1);

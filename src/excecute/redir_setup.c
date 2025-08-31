@@ -1,6 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   redir_setup.c                                      :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
-int save_io_fds(int *saved_stdin, int *saved_stdout)
+int	save_io_fds(int *saved_stdin, int *saved_stdout)
 {
 	*saved_stdin = dup(STDIN_FILENO);
 	if (*saved_stdin == -1)
@@ -14,7 +26,7 @@ int save_io_fds(int *saved_stdin, int *saved_stdout)
 	return (0);
 }
 
-void restore_io_fds(int saved_stdin, int saved_stdout)
+void	restore_io_fds(int saved_stdin, int saved_stdout)
 {
 	if (saved_stdin != -1)
 	{
@@ -28,11 +40,11 @@ void restore_io_fds(int saved_stdin, int saved_stdout)
 	}
 }
 
-int handle_all_redirections(t_cmd *cmd)
+int	handle_all_redirections(t_cmd *cmd)
 {
-	int saved_stdin;
-	int saved_stdout;
-	int result;
+	int	saved_stdin;
+	int	saved_stdout;
+	int	result;
 
 	if (!cmd)
 		return (0);
@@ -44,9 +56,9 @@ int handle_all_redirections(t_cmd *cmd)
 	return (result);
 }
 
-int setup_pipe_redirections(t_cmd *cmd, int *pipe_fds)
+int	setup_pipe_redirections(t_cmd *cmd, int *pipe_fds)
 {
-	int result;
+	int	result;
 
 	result = handle_all_redirections(cmd);
 	if (result)
@@ -60,7 +72,7 @@ int setup_pipe_redirections(t_cmd *cmd, int *pipe_fds)
 	return (0);
 }
 
-void cleanup_pipe_redirections(int *pipe_fds)
+void	cleanup_pipe_redirections(int *pipe_fds)
 {
 	if (pipe_fds)
 	{

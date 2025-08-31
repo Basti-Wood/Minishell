@@ -17,9 +17,9 @@
 # include <dirent.h>
 # include <errno.h>
 # include <fcntl.h>
-#include <stdio.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+# include <glob.h>
+# include <readline/history.h>
+# include <readline/readline.h>
 # include <signal.h>
 # include <stdarg.h>
 # include <stdbool.h>
@@ -32,7 +32,6 @@
 # include <sys/wait.h>
 # include <termios.h>
 # include <unistd.h>
-# include <glob.h>
 
 # define SINGLE_QUOTE_START '\001'
 # define SINGLE_QUOTE_END '\002'
@@ -106,7 +105,7 @@ typedef struct s_cmd
 	struct s_cmd				*next;
 }								t_cmd;
 
-char	*path_search(const char *cmd, char **envp);
+char							*path_search(const char *cmd, char **envp);
 
 typedef struct s_shell
 {
@@ -114,6 +113,14 @@ typedef struct s_shell
 	int							exit_status;
 	char						*input;
 }								t_shell;
+
+typedef struct s_heredoc_data
+{
+	int							pipe_fd;
+	char						*delimiter;
+	int							expand;
+	t_shell						*shell;
+}								t_heredoc_data;
 
 typedef struct s_fork_data
 {
@@ -132,8 +139,6 @@ typedef struct s_child_data
 	t_cmd						*current;
 	t_shell						*shell;
 }								t_child_data;
-
-extern volatile sig_atomic_t	g_signal_status;
 
 void							minishell(char **env);
 void							handle_sigint(int sig);
@@ -164,10 +169,13 @@ void							finalize_token_extraction(char *result,
 void							free_token(t_token *token);
 void							free_token_list(t_token *head);
 t_token							*create_new_token(char *str, t_token_type type);
-void							append_token(t_token **head, t_token *new_token);
+void							append_token(t_token **head,
+									t_token *new_token);
 t_cmd							*parse_tokens(t_token *tokens, t_shell *shell);
-t_cmd							*parse_command_line(t_token *tokens, t_shell *shell);
-t_cmd							*parse_pipeline(t_token **tokens, t_shell *shell);
+t_cmd							*parse_command_line(t_token *tokens,
+									t_shell *shell);
+t_cmd							*parse_pipeline(t_token **tokens,
+									t_shell *shell);
 t_cmd							*process_commands(t_token *tokens,
 									t_shell *shell);
 t_token							*handle_empty_expansions(t_token *tokens);
@@ -212,6 +220,8 @@ char							*get_env_value(t_env_list *env_list,
 void							set_env_value(t_env_list *env_list,
 									const char *key, const char *value);
 char							**env_list_to_array(t_env_list *env_list);
+int								create_env_array(t_shell *shell,
+									char ***env_array);
 t_env_node						*create_env_node(const char *key,
 									const char *value);
 void							remove_env_node(t_env_list *env_list,
@@ -230,17 +240,23 @@ int								handle_input_redirection(t_redir *redir);
 int								apply_input_redirections(t_cmd *cmd);
 int								restore_input(int saved_fd);
 int								validate_output_file(const char *filename);
-int								open_output_file(const char *filename, int flags);
+int								open_output_file(const char *filename,
+									int flags);
 int								handle_output_redirection(t_redir *redir);
 int								apply_output_redirections(t_cmd *cmd);
-int								save_io_fds(int *saved_stdin, int *saved_stdout);
-void							restore_io_fds(int saved_stdin, int saved_stdout);
+int								save_io_fds(int *saved_stdin,
+									int *saved_stdout);
+void							restore_io_fds(int saved_stdin,
+									int saved_stdout);
 int								handle_all_redirections(t_cmd *cmd);
 int								handle_redirections(t_cmd *cmd);
-int								setup_pipe_redirections(t_cmd *cmd, int *pipe_fds);
+int								setup_pipe_redirections(t_cmd *cmd,
+									int *pipe_fds);
 void							cleanup_pipe_redirections(int *pipe_fds);
-int								handle_input_redir(t_token **tokens, t_cmd *cmd);
-int								handle_output_redir(t_token **tokens, t_cmd *cmd);
+int								handle_input_redir(t_token **tokens,
+									t_cmd *cmd);
+int								handle_output_redir(t_token **tokens,
+									t_cmd *cmd);
 int								handle_heredoc(char *delimiter, t_shell *shell);
 int								setup_heredoc(char *delimiter, int pipefd[2],
 									char **final_delimiter);
@@ -257,7 +273,8 @@ int								ft_strcmp(const char *s1, const char *s2);
 char							*ft_strndup(const char *s, size_t n);
 char							*ft_strcpy(char *dest, const char *src);
 char							*ft_strcat(char *dest, const char *src);
-char							*ft_strncpy(char *dest, const char *src, size_t n);
+char							*ft_strncpy(char *dest, const char *src,
+									size_t n);
 int								ft_isspace(int c);
 int								ft_isnum(int c);
 int								is_operator(char c);
@@ -291,8 +308,12 @@ void							close_parent_pipes(int **pipes, int cmd_count);
 void							wait_for_children(pid_t *pids, int cmd_count,
 									t_shell *shell);
 void							close_all_pipes(int **pipes, int cmd_count);
+void							close_all_child_pipes(int **pipes,
+									int cmd_count);
 void							cleanup_pipes(int **pipes, int cmd_count);
 void							setup_child_process(t_child_data *data);
+void							execute_child_command(t_cmd *current,
+									t_shell *shell);
 int								execute_single_child(t_fork_data *data, int i,
 									t_cmd *current);
 int								allocate_resources(int ***pipes, pid_t **pids,
@@ -328,6 +349,8 @@ char							*get_var_name(char **src);
 char							**expand_wildcard(char *pattern);
 int								has_wildcard(char *str);
 t_token							*expand_wildcards_in_tokens(t_token *tokens);
+t_token							*replace_with_expanded(t_token *current,
+									char **expanded);
 char							*copy_string_to_dst(char *dst, const char *src);
 int								handle_operator_extraction(const char *s,
 									int *i, char *result, int *res_len);
@@ -356,11 +379,49 @@ void							restore_file_descriptors(int saved_stdin,
 									int saved_stdout);
 int								apply_output_redirection(t_redir *redir,
 									int flags);
-void							handle_quote_markers(char c, int *in_single_quotes);
+void							handle_quote_markers(char c,
+									int *in_single_quotes);
 int								should_copy_char(char c);
 int								validate_input_files_before_output(t_cmd *cmd);
 int								apply_redirections(t_cmd *cmd);
 int								handle_single_redirection(t_redir *redir);
-void							execute_process(char *executable, t_cmd *cmd, char **env_array);
+void							execute_process(char *executable, t_cmd *cmd,
+									char **env_array);
+void							setup_heredoc_signals_internal(void);
+pid_t							fork_heredoc_process(int pipefd[2],
+									char *tmp_delim);
+int								setup_heredoc_pipe(int pipefd[2],
+									char *tmp_delim);
+int								prepare_heredoc_delimiter(char *delimiter,
+									char **tmp_delim, int *expand);
+void							heredoc_sigint_handler(int sig);
+void							heredoc_child_main(t_heredoc_data *data);
+int								heredoc_parent_wait(pid_t pid, int pipefd[2],
+									char *tmp_delim);
+int								validate_single_redir(t_redir *redir);
+int								validate_output_redir(t_redir *redir);
+int								validate_input_redir(t_redir *redir);
+void							add_redirection(t_cmd *cmd, t_redir *redir);
+void							add_to_infile_list(t_cmd *cmd, t_redir *redir);
+void							add_to_outfile_list(t_cmd *cmd, t_redir *redir);
+void							link_tokens(t_token **head, t_token **current,
+									t_token *new_tokens);
+void							append_token(t_token **head,
+									t_token *new_token);
+t_token							*create_new_token(char *str, t_token_type type);
+void							free_token_list(t_token *head);
+void							free_token(t_token *token);
+int								has_quote_markers(char *str);
+int								apply_input_redir_safe(t_redir *redir,
+									int *saved_stdin);
+int								apply_output_redir_safe(t_redir *redir,
+									int *saved_stdout);
+int								apply_input_redir(t_redir *redir);
+int								apply_output_redir(t_redir *redir);
+int								apply_append_redir(t_redir *redir);
+t_token							*create_expanded_token(char *str,
+									t_token_type type);
+void							insert_token_after(t_token *current,
+									t_token *new_token);
 
 #endif

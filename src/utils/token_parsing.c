@@ -27,8 +27,7 @@ int	handle_quote_in_count(const char *s, int *i, char *quote)
 	return (0);
 }
 
-int	handle_operator_in_count(const char *s, int *i, int *count,
-		int *in_token)
+int	handle_operator_in_count(const char *s, int *i, int *count, int *in_token)
 {
 	if (is_operator(s[*i]))
 	{
@@ -41,8 +40,8 @@ int	handle_operator_in_count(const char *s, int *i, int *count,
 			(*count)++;
 		if (s[*i] == '|')
 			(*i)++;
-		else if ((s[*i] == '>' && s[*i + 1] == '>') || 
-				 (s[*i] == '<' && s[*i + 1] == '<'))
+		else if ((s[*i] == '>' && s[*i + 1] == '>') || (s[*i] == '<' && s[*i
+					+ 1] == '<'))
 			(*i) += 2;
 		else
 			(*i)++;

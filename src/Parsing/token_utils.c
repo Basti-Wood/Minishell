@@ -42,7 +42,10 @@ t_token	*create_new_token(char *str, t_token_type type)
 	new_token = (t_token *)malloc(sizeof(t_token));
 	if (!new_token)
 		return (NULL);
-	new_token->str = str ? ft_strdup(str) : NULL;
+	if (str)
+		new_token->str = ft_strdup(str);
+	else
+		new_token->str = NULL;
 	if (str && !new_token->str)
 	{
 		free(new_token);
@@ -72,3 +75,16 @@ void	append_token(t_token **head, t_token *new_token)
 	new_token->prev = current;
 }
 
+void	link_tokens(t_token **head, t_token **current, t_token *new_tokens)
+{
+	t_token	*last;
+
+	last = new_tokens;
+	while (last->next)
+		last = last->next;
+	if (*current)
+		(*current)->next = new_tokens;
+	else
+		*head = new_tokens;
+	*current = last;
+}

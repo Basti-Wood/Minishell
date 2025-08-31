@@ -16,7 +16,7 @@ int	execute_with_redirections(t_cmd *cmd, t_shell *shell)
 {
 	if (!cmd || !cmd->argv || !cmd->argv[0])
 		return (1);
-	return execute_command(cmd, shell);
+	return (execute_command(cmd, shell));
 }
 
 int	handle_single_redirection(t_redir *redir)

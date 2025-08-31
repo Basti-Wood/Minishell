@@ -1,4 +1,16 @@
-#include "../include/minishell.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pipe_utils.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/27 16:00:00 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/27 16:00:00 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../include/minishell.h"
 
 int	has_pipe(t_cmd *cmds)
 {
@@ -9,9 +21,9 @@ int	has_pipe(t_cmd *cmds)
 
 void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
 {
-	int		i;
-	int		status;
-	int		last_status;
+	int	i;
+	int	status;
+	int	last_status;
 
 	i = 0;
 	last_status = 0;

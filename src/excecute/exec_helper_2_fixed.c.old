@@ -49,24 +49,22 @@ void	restore_file_descriptors(int saved_stdin, int saved_stdout)
 
 int	execute_command(t_cmd *cmd, t_shell *shell)
 {
-	int saved_stdin;
-	int saved_stdout;
-	int result;
+	int	saved_stdin;
+	int	saved_stdout;
+	int	result;
 
 	if (!cmd)
 	{
 		return (0);
 	}
-
 	if (cmd->argv)
 	{
 		shift_argv(&cmd->argv);
 		if (!cmd->argv[0])
 			return (0);
 	}
-
 	/* For builtins we must apply redirections in the parent so they affect output
-	   of the builtin. For external commands we apply redirs in the child. */
+		of the builtin. For external commands we apply redirs in the child. */
 	if (is_builtin(cmd->argv[0]))
 	{
 		saved_stdin = dup(STDIN_FILENO);
@@ -95,7 +93,6 @@ int	handle_redirections_in_order(t_cmd *cmd)
 
 	if (!cmd)
 		return (0);
-	
 	// Process all redirections in order first
 	current = cmd->redirs;
 	while (current)
@@ -104,7 +101,6 @@ int	handle_redirections_in_order(t_cmd *cmd)
 			return (-1);
 		current = current->next;
 	}
-	
 	// Handle heredoc after other redirections (it has lower priority)
 	if (cmd->heredoc > 0)
 	{
@@ -117,6 +113,5 @@ int	handle_redirections_in_order(t_cmd *cmd)
 		close(cmd->heredoc);
 		cmd->heredoc = -1;
 	}
-	
 	return (0);
 }

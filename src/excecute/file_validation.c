@@ -1,8 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   file_validation.c                                 :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/08 15:53:42 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/08 15:54:03 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
-int check_redirect_errors(t_redir *redirs)
+int	check_redirect_errors(t_redir *redirs)
 {
-	t_redir *current;
+	t_redir	*current;
 
 	current = redirs;
 	while (current)
@@ -27,7 +39,7 @@ int check_redirect_errors(t_redir *redirs)
 	return (0);
 }
 
-int validate_input_files_before_output(t_cmd *cmd)
+int	validate_input_files_before_output(t_cmd *cmd)
 {
 	if (!cmd)
 		return (0);
@@ -36,35 +48,53 @@ int validate_input_files_before_output(t_cmd *cmd)
 	return (0);
 }
 
-int validate_output_file(const char *filename)
+static int	check_file_is_directory(const char *filename)
 {
-	struct stat st;
-	char *dir_path;
-	char *last_slash;
+	struct stat	st;
 
 	if (stat(filename, &st) == 0)
 	{
 		if (S_ISDIR(st.st_mode))
 		{
-			ft_fprintf_stderr("minishell: %s: Is a directory\n", filename);
+			ft_fprintf_stderr("%s: Is a directory\n", filename);
 			return (1);
 		}
 	}
+	return (0);
+}
+
+static int	validate_parent_directory(const char *filename)
+{
+	char	*dir_path;
+	char	*last_slash;
+	int		result;
+
 	dir_path = ft_strdup(filename);
 	if (!dir_path)
 		return (1);
 	last_slash = ft_strrchr(dir_path, '/');
-	if (last_slash && last_slash != dir_path)
+	if (!last_slash || last_slash == dir_path)
 	{
-		*last_slash = '\0';
-		if (access(dir_path, F_OK) == -1)
-		{
-			ft_fprintf_stderr("minishell: %s: No such file or directory\n",
-				filename);
-			free(dir_path);
-			return (1);
-		}
+		free(dir_path);
+		return (0);
 	}
+	*last_slash = '\0';
+	if (access(dir_path, F_OK) == -1)
+	{
+		ft_fprintf_stderr("%s: No such file or directory\n", filename);
+		result = 1;
+	}
+	else
+		result = 0;
 	free(dir_path);
+	return (result);
+}
+
+int	validate_output_file(const char *filename)
+{
+	if (check_file_is_directory(filename) != 0)
+		return (1);
+	if (validate_parent_directory(filename) != 0)
+		return (1);
 	return (0);
 }

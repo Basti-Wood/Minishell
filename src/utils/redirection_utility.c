@@ -1,8 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   redirection_utility.c                              :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/18 17:22:49 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../../include/minishell.h"
 
-int validate_redir_list(t_redir *redirs)
+int	validate_redir_list(t_redir *redirs)
 {
-	t_redir *current;
+	t_redir	*current;
 
 	if (!redirs)
 		return (0);
@@ -16,9 +28,9 @@ int validate_redir_list(t_redir *redirs)
 	return (0);
 }
 
-void free_string_array(char **array)
+void	free_string_array(char **array)
 {
-	int i;
+	int	i;
 
 	if (!array)
 		return ;
