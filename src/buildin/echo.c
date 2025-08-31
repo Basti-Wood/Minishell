@@ -32,12 +32,15 @@ int	builtin_echo(char **args)
 	}
 	while (args[i])
 	{
-		ft_putstr_fd(args[i], 1);
+		if (write(STDOUT_FILENO, args[i], ft_strlen(args[i])) == -1)
+			return (1);
 		if (args[i + 1])
-			ft_putstr_fd(" ", 1);
+			if (write(STDOUT_FILENO, " ", 1) == -1)
+				return (1);
 		i++;
 	}
 	if (newline)
-		ft_putstr_fd("\n", 1);
+		if (write(STDOUT_FILENO, "\n", 1) == -1)
+			return (1);
 	return (0);
 }
