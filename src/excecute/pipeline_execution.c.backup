@@ -1,0 +1,249 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   pipeline_execution.c                               :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/08/31 00:00:00 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/31 00:00:00 by seftekha         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../../include/minishell.h"
+
+int	has_pipe(t_cmd *cmds)
+{
+	if (!cmds)
+		return (0);
+	return (cmds->next != NULL);
+}
+
+int	count_commands(t_cmd *cmds)
+{
+	int		count;
+	t_cmd	*current;
+
+	count = 0;
+	current = cmds;
+	while (current)
+	{
+		count++;
+		current = current->next;
+	}
+	return (count);
+}
+
+void	setup_child_process(t_child_data *data)
+{
+	// Set up pipes for the current command
+	if (data->i > 0)
+	{
+		// Not the first command, read from previous pipe
+		dup2(data->pipes[data->i - 1][0], STDIN_FILENO);
+	}
+	if (data->i < data->cmd_count - 1)
+	{
+		// Not the last command, write to next pipe
+		dup2(data->pipes[data->i][1], STDOUT_FILENO);
+	}
+	
+	// Close all pipe file descriptors in child
+	close_all_child_pipes(data->pipes, data->cmd_count);
+	
+	// Restore default signal behavior for child
+	setup_child_signals();
+}
+
+void	execute_child_command(t_cmd *current, t_shell *shell)
+{
+	char	*executable;
+	char	**env_array;
+
+	// Handle redirections
+	if (handle_all_redirections(current) != 0)
+		exit(1);
+	
+	// Check if it's a builtin command
+	if (is_builtin(current->argv[0]))
+		exit(execute_builtin(current, shell));
+	
+	// Execute external command
+	executable = find_executable(current->argv[0], &shell->env_list);
+	if (!executable)
+	{
+		ft_fprintf_stderr("minishell: %s: command not found\n", current->argv[0]);
+		exit(127);
+	}
+	
+	if (create_env_array(shell, &env_array) != 0)
+	{
+		free(executable);
+		exit(1);
+	}
+	
+	execute_process(executable, current, env_array);
+}
+
+int	execute_single_child(t_fork_data *data, int i, t_cmd *current)
+{
+	t_child_data	child_data;
+	pid_t			pid;
+
+	pid = fork();
+	if (pid == -1)
+	{
+		ft_fprintf_stderr("minishell: fork: %s\n", strerror(errno));
+		return (-1);
+	}
+	
+	if (pid == 0)
+	{
+		// Child process
+		child_data.i = i;
+		child_data.cmd_count = data->cmd_count;
+		child_data.pipes = data->pipes;
+		child_data.current = current;
+		child_data.shell = data->shell;
+		
+		setup_child_process(&child_data);
+		execute_child_command(current, data->shell);
+		exit(1); // Should never reach here
+	}
+	
+	return (pid);
+}
+
+void	close_all_pipes(int **pipes, int cmd_count)
+{
+	int	i;
+
+	if (!pipes)
+		return ;
+	i = 0;
+	while (i < cmd_count - 1)
+	{
+		close(pipes[i][0]);
+		close(pipes[i][1]);
+		i++;
+	}
+}
+
+void	close_all_child_pipes(int **pipes, int cmd_count)
+{
+	int	i;
+
+	if (!pipes)
+		return ;
+	i = 0;
+	while (i < cmd_count - 1)
+	{
+		close(pipes[i][0]);
+		close(pipes[i][1]);
+		i++;
+	}
+}
+
+void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
+{
+	int	i;
+	int	status;
+	int	last_exit_status;
+
+	i = 0;
+	last_exit_status = 0;
+	while (i < cmd_count)
+	{
+		waitpid(pids[i], &status, 0);
+		
+		// Set exit status based on last command in pipeline
+		if (i == cmd_count - 1)
+		{
+			if (WIFSIGNALED(status))
+			{
+				int sig = WTERMSIG(status);
+				if (sig == SIGINT)
+					last_exit_status = 130;
+				else if (sig == SIGQUIT)
+				{
+					write(STDERR_FILENO, "Quit\n", 5);
+					last_exit_status = 131;
+				}
+				else
+					last_exit_status = 128 + sig;
+			}
+			else if (WIFEXITED(status))
+				last_exit_status = WEXITSTATUS(status);
+			else
+				last_exit_status = 1;
+		}
+		i++;
+	}
+	shell->exit_status = last_exit_status;
+}
+
+int	execute_pipeline(t_cmd *cmds, t_shell *shell)
+{
+	t_fork_data	data;
+	t_cmd		*current;
+	int			i;
+
+	if (!cmds)
+		return (0);
+	
+	data.cmd_count = count_commands(cmds);
+	data.cmds = cmds;
+	data.shell = shell;
+	
+	// Create pipes
+	data.pipes = create_pipes(data.cmd_count);
+	if (!data.pipes && data.cmd_count > 1)
+		return (1);
+	
+	// Allocate PID array
+	data.pids = malloc(sizeof(pid_t) * data.cmd_count);
+	if (!data.pids)
+	{
+		if (data.pipes)
+			free_pipes(data.pipes, data.cmd_count);
+		return (1);
+	}
+	
+	// Setup signals for pipeline execution
+	setup_execution_signals();
+	
+	// Fork and execute each command
+	current = cmds;
+	i = 0;
+	while (current && i < data.cmd_count)
+	{
+		data.pids[i] = execute_single_child(&data, i, current);
+		if (data.pids[i] == -1)
+		{
+			// Fork failed, clean up
+			if (data.pipes)
+				free_pipes(data.pipes, data.cmd_count);
+			free(data.pids);
+			restore_shell_signals(shell);
+			return (1);
+		}
+		current = current->next;
+		i++;
+	}
+	
+	// Close all pipes in parent
+	close_all_pipes(data.pipes, data.cmd_count);
+	
+	// Wait for all children
+	wait_for_children(data.pids, data.cmd_count, shell);
+	
+	// Cleanup
+	if (data.pipes)
+		free_pipes(data.pipes, data.cmd_count);
+	free(data.pids);
+	
+	// Restore shell signal handlers
+	restore_shell_signals(shell);
+	
+	return (shell->exit_status);
+}

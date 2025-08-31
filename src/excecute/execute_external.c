@@ -48,6 +48,7 @@ static void	handle_exec_child(t_cmd *cmd, t_shell *shell)
 	char	*executable;
 	char	**env_array;
 
+	setup_child_signals();
 	executable = find_executable(cmd->argv[0], &shell->env_list);
 	if (!executable)
 	{
@@ -60,6 +61,31 @@ static void	handle_exec_child(t_cmd *cmd, t_shell *shell)
 		exit(1);
 	}
 	execute_process(executable, cmd, env_array);
+}
+
+static int	get_process_exit_status(int status)
+{
+	int	sig;
+
+	if (WIFSIGNALED(status))
+	{
+		sig = WTERMSIG(status);
+		if (sig == SIGINT)
+		{
+			write(STDOUT_FILENO, "\n", 1);
+			return (130);
+		}
+		else if (sig == SIGQUIT)
+		{
+			write(STDERR_FILENO, "Quit (core dumped)\n", 19);
+			return (131);
+		}
+		else
+			return (128 + sig);
+	}
+	else if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+	return (1);
 }
 
 int	execute_external_command(t_cmd *cmd, t_shell *shell)
@@ -76,9 +102,10 @@ int	execute_external_command(t_cmd *cmd, t_shell *shell)
 		return (1);
 	}
 	if (pid == 0)
+	{
 		handle_exec_child(cmd, shell);
-	waitpid(pid, &status, 0);
-	if (WIFEXITED(status))
-		return (WEXITSTATUS(status));
-	return (1);
+	}
+	if (waitpid(pid, &status, 0) == -1)
+		return (1);
+	return (get_process_exit_status(status));
 }

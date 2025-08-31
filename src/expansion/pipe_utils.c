@@ -19,6 +19,36 @@ int	has_pipe(t_cmd *cmds)
 	return (cmds->next != NULL);
 }
 
+static int	handle_signal_status(int sig)
+{
+	if (sig == SIGINT)
+		return (130);
+	else if (sig == SIGQUIT)
+	{
+		write(STDERR_FILENO, "Quit\n", 5);
+		return (131);
+	}
+	else if (sig == SIGPIPE)
+		return (0);
+	else
+		return (128 + sig);
+}
+
+static int	get_exit_status(int status)
+{
+	int	sig;
+
+	if (WIFSIGNALED(status))
+	{
+		sig = WTERMSIG(status);
+		return (handle_signal_status(sig));
+	}
+	else if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+	else
+		return (1);
+}
+
 void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
 {
 	int	i;
@@ -31,15 +61,8 @@ void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
 	{
 		if (waitpid(pids[i], &status, 0) > 0)
 		{
-			if (WIFSIGNALED(status) && WTERMSIG(status) == SIGPIPE)
-				ft_fprintf_stderr(" Broken pipe\n");
 			if (i == cmd_count - 1)
-			{
-				if (WIFEXITED(status))
-					last_status = WEXITSTATUS(status);
-				else if (WIFSIGNALED(status))
-					last_status = 128 + WTERMSIG(status);
-			}
+				last_status = get_exit_status(status);
 		}
 		i++;
 	}

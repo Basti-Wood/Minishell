@@ -1,36 +1,39 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   pipe_child.c                                       :+:      :+:    :+:   */
+/*   signal_handling_extra.c                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/08 17:44:32 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
+/*   Created: 2025/08/31 00:00:00 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/31 00:00:00 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
-void	close_all_child_pipes(int **pipes, int cmd_count)
+void	setup_heredoc_signals(void)
 {
-	int	j;
-
-	j = 0;
-	while (j < cmd_count - 1)
-	{
-		close(pipes[j][0]);
-		close(pipes[j][1]);
-		j++;
-	}
+	setup_heredoc_signals_internal();
 }
 
-int	setup_child_pipes(int i, int cmd_count, int **pipes)
+void	setup_heredoc_signals_internal(void)
 {
-	if (i > 0)
-		dup2(pipes[i - 1][0], STDIN_FILENO);
-	if (i < cmd_count - 1)
-		dup2(pipes[i][1], STDOUT_FILENO);
-	close_all_child_pipes(pipes, cmd_count);
-	return (0);
+	struct sigaction	sa;
+
+	sa.sa_handler = handle_sigint;
+	sa.sa_flags = 0;
+	sigemptyset(&sa.sa_mask);
+	sigaction(SIGINT, &sa, NULL);
+}
+
+void	setup_execution_signals(void)
+{
+	signal(SIGINT, SIG_IGN);
+	signal(SIGQUIT, SIG_IGN);
+}
+
+void	restore_shell_signals(t_shell *shell)
+{
+	setup_signals(shell);
 }

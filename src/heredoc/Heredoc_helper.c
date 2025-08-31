@@ -65,13 +65,3 @@ pid_t	fork_heredoc_process(int pipefd[2], char *tmp_delim)
 	}
 	return (pid);
 }
-
-void	setup_heredoc_signals_internal(void)
-{
-	struct sigaction	sa;
-
-	sa.sa_handler = heredoc_sigint_handler;
-	sa.sa_flags = 0;
-	sigemptyset(&sa.sa_mask);
-	sigaction(SIGINT, &sa, NULL);
-}

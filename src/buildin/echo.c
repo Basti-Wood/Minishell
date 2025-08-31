@@ -28,6 +28,31 @@ static int	has_n_flag(char *arg)
 	return (i > 1);
 }
 
+static int	write_echo_args(char **args, int start_index)
+{
+	int	i;
+
+	i = start_index;
+	while (args[i])
+	{
+		if (write(STDOUT_FILENO, args[i], ft_strlen(args[i])) == -1)
+		{
+			ft_fprintf_stderr("echo: write error: %s\n", strerror(errno));
+			return (1);
+		}
+		if (args[i + 1])
+		{
+			if (write(STDOUT_FILENO, " ", 1) == -1)
+			{
+				ft_fprintf_stderr("echo: write error: %s\n", strerror(errno));
+				return (1);
+			}
+		}
+		i++;
+	}
+	return (0);
+}
+
 int	builtin_echo(char **args)
 {
 	int	i;
@@ -42,17 +67,15 @@ int	builtin_echo(char **args)
 		newline = 0;
 		i = 2;
 	}
-	while (args[i])
-	{
-		if (write(STDOUT_FILENO, args[i], ft_strlen(args[i])) == -1)
-			return (1);
-		if (args[i + 1])
-			if (write(STDOUT_FILENO, " ", 1) == -1)
-				return (1);
-		i++;
-	}
+	if (write_echo_args(args, i) == 1)
+		return (1);
 	if (newline)
+	{
 		if (write(STDOUT_FILENO, "\n", 1) == -1)
+		{
+			ft_fprintf_stderr("echo: write error: %s\n", strerror(errno));
 			return (1);
+		}
+	}
 	return (0);
 }

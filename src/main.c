@@ -12,15 +12,26 @@
 
 #include "../include/minishell.h"
 
-void	handle_sigint(int sig)
-{
-	g_signal_status = sig;
-}
-
 int	main(int argc, char **argv, char **env)
 {
 	(void)argc;
 	(void)argv;
 	minishell(env);
 	return (0);
+}
+
+void	minishell(char **env)
+{
+	t_shell	shell;
+	char	*line;
+
+	init_main_shell(&shell, env);
+	line = get_input_and_handle_signals(&shell);
+	while (line)
+	{
+		handle_shell_input(line, &shell);
+		line = get_input_and_handle_signals(&shell);
+	}
+	if (shell.env_list.head)
+		free_env_list(&shell.env_list);
 }
