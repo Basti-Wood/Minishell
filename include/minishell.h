@@ -78,6 +78,7 @@ typedef struct s_token
 {
 	char				*str;
 	t_token_type		type;
+	int					was_quoted;
 	struct s_token		*next;
 	struct s_token		*prev;
 }						t_token;

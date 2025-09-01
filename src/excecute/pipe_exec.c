@@ -25,6 +25,7 @@ int	pipe_create(int pipe_fds[2])
 void	execute_child_process(t_cmd *cmd, int *pipe_in, int *pipe_out,
 		t_shell *shell)
 {
+	setup_child_signals();
 	if (pipe_in && pipe_in[0] != -1)
 	{
 		dup2(pipe_in[0], STDIN_FILENO);
@@ -73,7 +74,19 @@ int	pipe_wait_for_children(pid_t *pids, int count, t_shell *shell)
 	while (i < count)
 	{
 		waitpid(pids[i], &status, 0);
-		if (i == count - 1)
+		if (WIFSIGNALED(status))
+		{
+			int sig = WTERMSIG(status);
+			if (sig == SIGPIPE)
+			{
+				write(STDERR_FILENO, "Broken pipe\n", 12);
+				if (i == count - 1)
+					last_status = 141;
+			}
+			else if (i == count - 1)
+				last_status = 128 + sig;
+		}
+		else if (WIFEXITED(status) && i == count - 1)
 			last_status = WEXITSTATUS(status);
 		i++;
 	}

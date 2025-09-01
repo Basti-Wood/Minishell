@@ -28,8 +28,7 @@ int	check_input_redirections(t_cmd *cmd)
 
 void	handle_child_pipes(t_child_data *data, int has_input_redir)
 {
-	(void)has_input_redir;
-	if (data->i > 0)
+	if (data->i > 0 && !has_input_redir)
 		dup2(data->pipes[data->i - 1][0], STDIN_FILENO);
 	if (data->i < data->cmd_count - 1)
 		dup2(data->pipes[data->i][1], STDOUT_FILENO);

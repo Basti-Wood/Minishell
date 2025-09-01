@@ -52,6 +52,7 @@ t_token	*create_new_token(char *str, t_token_type type)
 		return (NULL);
 	}
 	new_token->type = type;
+	new_token->was_quoted = 0;
 	new_token->next = NULL;
 	new_token->prev = NULL;
 	return (new_token);

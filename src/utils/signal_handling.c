@@ -44,4 +44,5 @@ void	setup_child_signals(void)
 	signal(SIGTSTP, SIG_DFL);
 	signal(SIGTTIN, SIG_DFL);
 	signal(SIGTTOU, SIG_DFL);
+	signal(SIGPIPE, SIG_DFL);
 }

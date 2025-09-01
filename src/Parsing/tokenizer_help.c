@@ -34,6 +34,7 @@ static t_token	*create_quoted_token(char *expanded, t_token *prev)
 		return (NULL);
 	new_token->str = expanded;
 	new_token->type = EMPTY;
+	new_token->was_quoted = 1;
 	new_token->next = NULL;
 	new_token->prev = prev;
 	return (new_token);
@@ -44,9 +45,16 @@ static t_token	*split_expanded_token(char *expanded, t_token *prev)
 	t_token	*head;
 	char	**words;
 	int		i;
+	int		had_quotes;
 
-	if (check_for_quotes(expanded) || ft_strlen(expanded) == 0)
+	had_quotes = check_for_quotes(expanded);
+	if (had_quotes)
 		return (create_quoted_token(expanded, prev));
+	if (ft_strlen(expanded) == 0)
+	{
+		free(expanded);
+		return (NULL);
+	}
 	words = ft_split(expanded, ' ');
 	if (!words || !words[0])
 	{

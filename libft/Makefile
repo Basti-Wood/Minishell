@@ -51,7 +51,7 @@ all:		$(NAME)
 $(NAME):	$(OBJ)
 			@make -C $(LIBFT)
 			@cp libft/prelibft.a .
-			
+			@$(AR) prelibft.a $(OBJ)
 			@$(AR) $(NAME) $(OBJ)
 
 $(OBJ_DIR)%.o: $(SRC_DIR)%.c | $(OBJF)

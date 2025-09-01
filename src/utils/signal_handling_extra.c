@@ -31,6 +31,7 @@ void	setup_execution_signals(void)
 {
 	signal(SIGINT, SIG_IGN);
 	signal(SIGQUIT, SIG_IGN);
+	signal(SIGPIPE, SIG_DFL);
 }
 
 void	restore_shell_signals(t_shell *shell)
