@@ -12,7 +12,7 @@
 
 #include "../../include/minishell.h"
 
-static void	close_all_child_pipes(int **pipes, int cmd_count)
+void	close_all_child_pipes(int **pipes, int cmd_count)
 {
 	int	j;
 
@@ -33,27 +33,4 @@ int	setup_child_pipes(int i, int cmd_count, int **pipes)
 		dup2(pipes[i][1], STDOUT_FILENO);
 	close_all_child_pipes(pipes, cmd_count);
 	return (0);
-}
-
-void	execute_child_external(t_cmd *current, t_shell *shell)
-{
-	char	*executable;
-	char	**env_array;
-
-	executable = find_executable(current->argv[0], &shell->env_list);
-	if (!executable)
-	{
-		ft_fprintf_stderr("minishell: %s: command not found\n",
-			current->argv[0]);
-		exit(127);
-	}
-	env_array = env_list_to_array(&shell->env_list);
-	if (!env_array)
-	{
-		free(executable);
-		exit(1);
-	}
-	execve(executable, current->argv, env_array);
-	perror("execve");
-	exit(126);
 }

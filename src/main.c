@@ -14,8 +14,29 @@
 
 int	main(int argc, char **argv, char **env)
 {
+	int		exit_status;
+
 	(void)argc;
 	(void)argv;
-	minishell(env);
-	return (0);
+	exit_status = minishell(env);
+	return (exit_status);
+}
+
+int	minishell(char **env)
+{
+	t_shell	shell;
+	char	*line;
+	int		exit_status;
+
+	init_main_shell(&shell, env);
+	line = get_input_and_handle_signals(&shell);
+	while (line)
+	{
+		handle_shell_input(line, &shell);
+		line = get_input_and_handle_signals(&shell);
+	}
+	exit_status = shell.exit_status;
+	if (shell.env_list.head)
+		free_env_list(&shell.env_list);
+	return (exit_status);
 }

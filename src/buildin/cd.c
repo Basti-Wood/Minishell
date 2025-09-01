@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   cd.c                                               :+:      :+:    :+:   */
+/*   cd.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/07/28 16:02:09 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/25 19:32:47 by seftekha         ###   ########.fr       */
+/*   Created: 2025/07/30 18:49:41 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/25 20:06:28 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ static char	*get_target_path(char **args, t_env_list *env_list)
 		home = get_env_value(env_list, "HOME");
 		if (!home)
 		{
-			ft_fprintf_stderr("cd: HOME not set\n");
+			ft_fprintf_stderr("minishell: cd: HOME not set\n");
 			return (NULL);
 		}
 		return (home);
@@ -64,7 +64,7 @@ int	builtin_cd(char **args, t_env_list *env_list)
 		return (1);
 	if (chdir(path) != 0)
 	{
-		perror("cd");
+		perror("minishell: cd");
 		return (1);
 	}
 	new_pwd = getcwd(NULL, 0);

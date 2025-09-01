@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 
 void	free_paths_array(char **paths)
 {
@@ -24,14 +24,8 @@ void	free_paths_array(char **paths)
 
 static char	*handle_absolute_path(char *cmd)
 {
-	struct stat	st;
-
 	if (access(cmd, F_OK) == 0)
-	{
-		if (stat(cmd, &st) == 0 && S_ISDIR(st.st_mode))
-			return (NULL);
 		return (ft_strdup(cmd));
-	}
 	return (NULL);
 }
 

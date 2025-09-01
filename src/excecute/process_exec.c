@@ -10,7 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 #include <errno.h>
 
 void	try_shell_script(char *executable, t_cmd *cmd, char **env_array)

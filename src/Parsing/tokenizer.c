@@ -83,3 +83,16 @@ t_token	*handle_empty_expansions(t_token *tokens)
 	}
 	return (tokens);
 }
+
+int	has_quote_markers(char *str)
+{
+	while (str && *str)
+	{
+		if (*str == '\001' || *str == '\002')
+			return (1);
+		if (*str == '\003' || *str == '\004')
+			return (1);
+		str++;
+	}
+	return (0);
+}

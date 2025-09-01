@@ -10,31 +10,29 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 
 void	shift_argv(char ***argv)
 {
-	int	i;
-	int	j;
+	int		i;
+	int		j;
+	char	**args;
 
-	i = 0;
-	while ((*argv)[i] && (*argv)[i][0] == '\0')
-	{
-		free((*argv)[i]);
-		i++;
-	}
-	if (!(*argv)[i])
-	{
-		free((*argv)[0]);
-		(*argv)[0] = NULL;
+	if (!argv || !*argv)
 		return ;
-	}
+	args = *argv;
+	if (!args[0])
+		return ;
+	i = 0;
 	j = 0;
-	while ((*argv)[i])
+	while (args[i])
 	{
-		(*argv)[j] = (*argv)[i];
-		j++;
+		if (args[i][0] != '\0')
+		{
+			args[j] = args[i];
+			j++;
+		}
 		i++;
 	}
-	(*argv)[j] = NULL;
+	args[j] = NULL;
 }

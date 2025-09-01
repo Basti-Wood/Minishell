@@ -38,8 +38,8 @@ static char	**allocate_result_array(int count)
 
 static char	**copy_glob_results(glob_t *glob_result)
 {
-	char		**result;
-	size_t		i;
+	char	**result;
+	size_t	i;
 
 	result = allocate_result_array(glob_result->gl_pathc);
 	if (!result)

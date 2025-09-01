@@ -10,21 +10,26 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 
 void	free_env_list(t_env_list *env_list)
 {
 	t_env_node	*current;
 	t_env_node	*tmp;
 
+	if (!env_list)
+		return ;
 	current = env_list->head;
 	while (current)
 	{
 		tmp = current;
 		current = current->next;
-		free(tmp->key);
-		free(tmp->value);
+		if (tmp->key)
+			free(tmp->key);
+		if (tmp->value)
+			free(tmp->value);
 		free(tmp);
 	}
-	free(env_list);
+	env_list->head = NULL;
+	env_list->size = 0;
 }

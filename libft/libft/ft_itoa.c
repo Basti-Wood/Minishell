@@ -14,12 +14,12 @@
 
 static size_t	ft_nbrlen(int nbr)
 {
-	int		len;
+	size_t	len;
 
 	len = 0;
 	if (nbr == 0)
 		return (1);
-	if (nbr < len)
+	if (nbr < 0)
 		len += 1;
 	while (nbr != 0)
 	{
@@ -31,28 +31,25 @@ static size_t	ft_nbrlen(int nbr)
 
 char	*ft_itoa(int n)
 {
-	size_t	i;
-	size_t	n_size;
 	char	*str;
+	int		len;
+	long	num;
 
-	i = 0;
-	if (n == -2147483648)
-		return (ft_strdup("-2147483648"));
-	n_size = ft_nbrlen(n);
-	str = (char *)malloc(sizeof(char) * (n_size + 1));
-	if (str == 0)
-		return (0);
-	str[n_size] = 0;
-	if (n < 0)
+	num = n;
+	len = ft_nbrlen(n);
+	str = malloc(len + 1);
+	if (!str)
+		return (NULL);
+	str[len] = '\0';
+	if (num < 0)
 	{
 		str[0] = '-';
-		n *= -1;
-		i += 1;
+		num = -num;
 	}
-	while (i < n_size--)
+	while (len-- > (n < 0))
 	{
-		str[n_size] = (n % 10) + '0';
-		n /= 10;
+		str[len] = (num % 10) + '0';
+		num /= 10;
 	}
 	return (str);
 }

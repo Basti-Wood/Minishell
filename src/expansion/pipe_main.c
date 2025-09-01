@@ -29,26 +29,41 @@ static int	fork_and_execute_children(t_fork_data *data)
 	return (0);
 }
 
-int	execute_pipeline(t_cmd *cmds, t_shell *shell)
+static int	setup_pipeline_resources(t_cmd *cmds, t_shell *shell,
+			t_fork_data *fork_data)
 {
-	int			**pipes;
-	pid_t		*pids;
-	int			cmd_count;
-	t_fork_data	fork_data;
+	int		**pipes;
+	pid_t	*pids;
+	int		cmd_count;
 
 	cmd_count = count_commands(cmds);
 	if (cmd_count < 2)
 		return (execute_command(cmds, shell));
 	if (allocate_resources(&pipes, &pids, cmd_count))
 		return (1);
-	fork_data.cmds = cmds;
-	fork_data.pipes = pipes;
-	fork_data.pids = pids;
-	fork_data.cmd_count = cmd_count;
-	fork_data.shell = shell;
+	fork_data->cmds = cmds;
+	fork_data->pipes = pipes;
+	fork_data->pids = pids;
+	fork_data->cmd_count = cmd_count;
+	fork_data->shell = shell;
+	return (0);
+}
+
+int	execute_pipeline(t_cmd *cmds, t_shell *shell)
+{
+	t_fork_data	fork_data;
+	int			setup_result;
+
+	setup_result = setup_pipeline_resources(cmds, shell, &fork_data);
+	if (setup_result != 0)
+		return (setup_result);
 	if (fork_and_execute_children(&fork_data))
+	{
+		cleanup_resources(fork_data.pipes, fork_data.pids, fork_data.cmd_count);
 		return (1);
-	wait_for_children(pids, cmd_count, shell);
-	cleanup_resources(pipes, pids, cmd_count);
+	}
+	close_all_pipes(fork_data.pipes, fork_data.cmd_count);
+	wait_for_children(fork_data.pids, fork_data.cmd_count, shell);
+	cleanup_resources(fork_data.pipes, fork_data.pids, fork_data.cmd_count);
 	return (shell->exit_status);
 }

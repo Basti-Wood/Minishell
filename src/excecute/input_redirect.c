@@ -5,37 +5,51 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/08 16:52:30 by seftekha          #+#    #+#             */
-/*   Updated: 2025/08/08 16:52:59 by seftekha         ###   ########.fr       */
+/*   Created: 2025/08/08 15:53:42 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/08 15:54:03 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 
-static int	process_input_list(t_redir *redir, int *fd)
+static int	process_redir_loop(t_redir *redir, int *fd)
 {
-	if (!redir)
-		return (0);
-	if (process_input_redir(redir, fd) == -1)
-		return (-1);
-	return (process_input_list(redir->next, fd));
+	t_redir	*current;
+	int		result;
+
+	current = redir;
+	while (current)
+	{
+		result = process_input_redir(current, fd);
+		if (result != 0)
+			return (1);
+		current = current->next;
+	}
+	return (0);
 }
 
 int	handle_input_redirections(t_cmd *cmd)
 {
 	int	fd;
+	int	result;
 
 	fd = -1;
-	if (cmd->infiles && process_input_list(cmd->infiles, &fd) == -1)
-		return (-1);
-	if (apply_input_fd(fd) == -1)
-		return (-1);
+	if (!cmd)
+		return (0);
+	if (cmd->infiles)
+	{
+		result = process_redir_loop(cmd->infiles, &fd);
+		if (result != 0)
+			return (1);
+	}
+	if (apply_input_fd(fd) != 0)
+		return (1);
 	if (cmd->heredoc > 0)
 	{
 		if (dup2(cmd->heredoc, STDIN_FILENO) == -1)
 		{
 			perror("dup2 heredoc");
-			return (-1);
+			return (1);
 		}
 		close(cmd->heredoc);
 	}

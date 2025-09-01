@@ -5,34 +5,38 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: seftekha <seftekha@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/18 10:00:00 by seftekha          #+#    #+#             */
-/*   Updated: Fixed version to prevent double free       ###   ########.fr       */
+/*   Created: 2025/08/18 17:22:49 by seftekha          #+#    #+#             */
+/*   Updated: 2025/08/27 15:25:34 by seftekha         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/minishell.h"
+#include "../../include/minishell.h"
 
 void	free_cmds(t_cmd *cmds)
 {
 	t_cmd	*tmp;
+	t_cmd	*next;
 
-	while (cmds)
+	tmp = cmds;
+	while (tmp)
 	{
-		tmp = cmds;
-		cmds = cmds->next;
-		
-		// Free argv array
+		next = tmp->next;
 		if (tmp->argv)
+		{
 			free_argv(tmp->argv);
-		
-		// Free only the main redirs list (no more infiles/outfiles)
-		free_redirs(tmp->redirs);
-		
-		// Close heredoc fd if still open
+			tmp->argv = NULL;
+		}
+		if (tmp->redirs)
+		{
+			free_redirs(tmp->redirs);
+			tmp->redirs = NULL;
+		}
 		if (tmp->heredoc > 0)
+		{
 			close(tmp->heredoc);
-		
-		// Free the cmd structure itself
+			tmp->heredoc = -1;
+		}
 		free(tmp);
+		tmp = next;
 	}
 }
