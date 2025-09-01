@@ -73,8 +73,7 @@ t_token	*handle_empty_expansions(t_token *tokens)
 		next = current->next;
 		if (is_empty_token(current) && current->type != PIPE
 			&& current->type != INPUT && current->type != TRUNC
-			&& current->type != APPEND && current->type != HEREDOC
-			&& !current->was_quoted)
+			&& current->type != APPEND && current->type != HEREDOC)
 		{
 			if (current == tokens)
 				tokens = next;
