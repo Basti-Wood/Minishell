@@ -38,8 +38,9 @@ static char	*read_from_stdin(void)
 char	*get_input_and_handle_signals(t_shell *shell)
 {
 	char		*line;
-	static char	*saved_line = NULL;
+	static char	*saved_line;
 
+	saved_line = NULL;
 	setup_signals(shell);
 	if (saved_line)
 	{

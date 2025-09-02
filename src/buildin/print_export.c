@@ -12,7 +12,6 @@
 
 #include "../../include/minishell.h"
 
-
 void	swap_env_nodes(t_env_node *a, t_env_node *b)
 {
 	char	*temp_key;

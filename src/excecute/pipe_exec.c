@@ -25,6 +25,7 @@ int	pipe_create(int pipe_fds[2])
 void	execute_child_process(t_cmd *cmd, int *pipe_in, int *pipe_out,
 		t_shell *shell)
 {
+	setup_child_signals();
 	if (pipe_in && pipe_in[0] != -1)
 	{
 		dup2(pipe_in[0], STDIN_FILENO);
@@ -62,19 +63,41 @@ int	pipe_execute_command(t_cmd *cmd, int *pipe_in, int *pipe_out,
 	return (pid);
 }
 
+static int	process_child_status(int status, int index, int count)
+{
+	int	sig;
+
+	if (WIFSIGNALED(status))
+	{
+		sig = WTERMSIG(status);
+		if (sig == SIGPIPE)
+		{
+			if (index == count - 1)
+				return (141);
+		}
+		else if (index == count - 1)
+			return (128 + sig);
+	}
+	else if (WIFEXITED(status) && index == count - 1)
+		return (WEXITSTATUS(status));
+	return (0);
+}
+
 int	pipe_wait_for_children(pid_t *pids, int count, t_shell *shell)
 {
 	int	i;
 	int	status;
 	int	last_status;
+	int	temp_status;
 
 	i = 0;
 	last_status = 0;
 	while (i < count)
 	{
 		waitpid(pids[i], &status, 0);
+		temp_status = process_child_status(status, i, count);
 		if (i == count - 1)
-			last_status = WEXITSTATUS(status);
+			last_status = temp_status;
 		i++;
 	}
 	shell->exit_status = last_status;

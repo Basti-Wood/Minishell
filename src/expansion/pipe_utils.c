@@ -29,12 +29,15 @@ static int	handle_signal_status(int sig)
 		return (131);
 	}
 	else if (sig == SIGPIPE)
-		return (0);
+	{
+		write(STDERR_FILENO, " Broken pipe\n", 12);
+		return (141);
+	}
 	else
 		return (128 + sig);
 }
 
-static int	get_exit_status(int status)
+int	get_exit_status(int status)
 {
 	int	sig;
 
@@ -54,6 +57,7 @@ void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
 	int	i;
 	int	status;
 	int	last_status;
+	int	temp_status;
 
 	i = 0;
 	last_status = 0;
@@ -61,8 +65,9 @@ void	wait_for_children(pid_t *pids, int cmd_count, t_shell *shell)
 	{
 		if (waitpid(pids[i], &status, 0) > 0)
 		{
+			temp_status = get_exit_status(status);
 			if (i == cmd_count - 1)
-				last_status = get_exit_status(status);
+				last_status = temp_status;
 		}
 		i++;
 	}
