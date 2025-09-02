@@ -111,6 +111,7 @@ typedef struct s_shell
 {
 	t_env_list			env_list;
 	int					exit_status;
+	int					should_exit;
 	char				*input;
 }						t_shell;
 
@@ -143,6 +144,7 @@ typedef struct s_child_data
 int						minishell(char **env);
 void					init_main_shell(t_shell *shell, char **env);
 char					*get_input_and_handle_signals(t_shell *shell);
+void					cleanup_static_vars(void);
 void					handle_shell_input(char *line, t_shell *shell);
 void					handle_sigint(int sig);
 void					setup_heredoc_signals(void);

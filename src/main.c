@@ -30,9 +30,11 @@ int	minishell(char **env)
 
 	init_main_shell(&shell, env);
 	line = get_input_and_handle_signals(&shell);
-	while (line)
+	while (line && !shell.should_exit)
 	{
 		handle_shell_input(line, &shell);
+		if (shell.should_exit)
+			break ;
 		line = get_input_and_handle_signals(&shell);
 	}
 	exit_status = shell.exit_status;

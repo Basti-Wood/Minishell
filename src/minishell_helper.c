@@ -14,32 +14,34 @@
 
 static char	*read_from_stdin(void)
 {
-	char	*buffer;
-	char	*line;
-	size_t	len;
-	ssize_t	read_result;
+	char	buffer[4096];
+	ssize_t	bytes_read;
+	int		i;
 
-	buffer = NULL;
-	len = 0;
-	read_result = getline(&buffer, &len, stdin);
-	if (read_result == -1)
+	i = 0;
+	while (i < (int)(sizeof(buffer) - 1))
 	{
-		if (buffer)
-			free(buffer);
-		return (NULL);
+		bytes_read = read(STDIN_FILENO, &buffer[i], 1);
+		if (bytes_read <= 0)
+		{
+			if (i == 0)
+				return (NULL);
+			break ;
+		}
+		if (buffer[i] == '\n')
+			break ;
+		i++;
 	}
-	if (buffer[read_result - 1] == '\n')
-		buffer[read_result - 1] = '\0';
-	line = ft_strdup(buffer);
-	free(buffer);
-	return (line);
+	buffer[i] = '\0';
+	return (ft_strdup(buffer));
 }
 
 char	*get_input_and_handle_signals(t_shell *shell)
 {
 	char		*line;
-	static char	*saved_line = NULL;
+	static char	*saved_line;
 
+	saved_line = NULL;
 	setup_signals(shell);
 	if (saved_line)
 	{

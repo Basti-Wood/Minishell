@@ -37,7 +37,7 @@ static int	handle_signal_status(int sig)
 		return (128 + sig);
 }
 
-static int	get_exit_status(int status)
+int	get_exit_status(int status)
 {
 	int	sig;
 

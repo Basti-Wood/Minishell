@@ -52,6 +52,7 @@ static t_cmd	*parse_input_to_commands(char *line, t_shell *shell)
 void	handle_shell_input(char *line, t_shell *shell)
 {
 	t_cmd	*cmds;
+	int		command_exit_status;
 
 	if (!line || !*line)
 	{
@@ -67,10 +68,12 @@ void	handle_shell_input(char *line, t_shell *shell)
 	}
 	setup_execution_signals();
 	if (has_pipe(cmds))
-		shell->exit_status = execute_pipeline(cmds, shell);
+		command_exit_status = execute_pipeline(cmds, shell);
 	else
-		shell->exit_status = execute_command(cmds, shell);
+		command_exit_status = execute_command(cmds, shell);
 	restore_shell_signals(shell);
+	if (!shell->should_exit)
+		shell->exit_status = command_exit_status;
 	free_cmds(cmds);
 	free(line);
 }
